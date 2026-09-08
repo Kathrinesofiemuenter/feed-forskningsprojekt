@@ -14,16 +14,160 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      feed_usage: {
+        Row: {
+          id: string
+          seconds: number
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          seconds?: number
+          updated_at?: string
+          usage_date: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          seconds?: number
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          anxious: number
+          feed_seconds_at_submit: number | null
+          happy: number
+          id: string
+          lively: number
+          nervous: number
+          optimistic: number
+          submitted_at: string
+          survey_date: string
+          tense: number
+          user_id: string
+          username: string
+        }
+        Insert: {
+          anxious: number
+          feed_seconds_at_submit?: number | null
+          happy: number
+          id?: string
+          lively: number
+          nervous: number
+          optimistic: number
+          submitted_at?: string
+          survey_date: string
+          tense: number
+          user_id: string
+          username: string
+        }
+        Update: {
+          anxious?: number
+          feed_seconds_at_submit?: number | null
+          happy?: number
+          id?: string
+          lively?: number
+          nervous?: number
+          optimistic?: number
+          submitted_at?: string
+          survey_date?: string
+          tense?: number
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          storage_path: string
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          storage_path: string
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          storage_path?: string
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_feed_usage: {
+        Args: { _date: string; _seconds: number }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +294,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
