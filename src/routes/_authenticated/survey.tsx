@@ -9,6 +9,11 @@ import { LIKERT_LABELS, SURVEY_ITEMS, type SurveyKey } from "@/lib/study";
 
 export const Route = createFileRoute("/_authenticated/survey")({
   beforeLoad: async ({ context }) => {
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: context.user.id,
+      _role: "admin",
+    });
+    if (isAdmin) throw redirect({ to: "/feed" });
     const status = await fetchSurveyStatus(context.user.id);
     if (!status.due) throw redirect({ to: "/feed" });
     return { surveyStatus: status };

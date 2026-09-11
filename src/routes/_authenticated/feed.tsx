@@ -12,9 +12,13 @@ const FLUSH_INTERVAL = 15;
 
 export const Route = createFileRoute("/_authenticated/feed")({
   beforeLoad: async ({ context }) => {
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: context.user.id,
+      _role: "admin",
+    });
     const status = await fetchSurveyStatus(context.user.id);
-    if (status.due) throw redirect({ to: "/survey" });
-    return { surveyStatus: status };
+    if (!isAdmin && status.due) throw redirect({ to: "/survey" });
+    return { surveyStatus: status, isAdmin: Boolean(isAdmin) };
   },
   component: FeedPage,
 });
@@ -40,7 +44,7 @@ async function fetchFeed(userId: string) {
 }
 
 function FeedPage() {
-  const { user, surveyStatus } = Route.useRouteContext();
+  const { user, surveyStatus, isAdmin } = Route.useRouteContext();
   const navigate = useNavigate();
   const signOut = useSignOut();
   const { data: me } = useCurrentUser();
@@ -53,6 +57,8 @@ function FeedPage() {
   const pending = useRef(0);
   const flushing = useRef(false);
   const submittedToday = useRef(surveyStatus.submittedToday);
+  const isAdminRef = useRef(isAdmin);
+  isAdminRef.current = isAdmin;
 
   useEffect(() => {
     let dateAtStart = localDate();
@@ -72,7 +78,12 @@ function FeedPage() {
         return;
       }
       if (typeof total === "number") setSeconds(total);
-      if (typeof total === "number" && total >= SURVEY_THRESHOLD_SECONDS && !submittedToday.current) {
+      if (
+        typeof total === "number" &&
+        total >= SURVEY_THRESHOLD_SECONDS &&
+        !submittedToday.current &&
+        !isAdminRef.current
+      ) {
         navigate({ to: "/survey", replace: true });
       }
     };
