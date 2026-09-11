@@ -12,9 +12,13 @@ const FLUSH_INTERVAL = 15;
 
 export const Route = createFileRoute("/_authenticated/feed")({
   beforeLoad: async ({ context }) => {
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: context.user.id,
+      _role: "admin",
+    });
     const status = await fetchSurveyStatus(context.user.id);
-    if (status.due) throw redirect({ to: "/survey" });
-    return { surveyStatus: status };
+    if (!isAdmin && status.due) throw redirect({ to: "/survey" });
+    return { surveyStatus: status, isAdmin: Boolean(isAdmin) };
   },
   component: FeedPage,
 });
