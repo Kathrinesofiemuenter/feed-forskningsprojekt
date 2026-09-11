@@ -110,15 +110,18 @@ function FeedPage() {
   const progress = Math.min(1, seconds / SURVEY_THRESHOLD_SECONDS);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent px-4 pb-8 pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div
+      className="relative h-dvh w-full overflow-hidden bg-black"
+      onPointerDown={() => setMuted(false)}
+    >
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-black via-black/50 to-transparent px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto min-w-0">
-          <p className="truncate text-sm font-semibold">@{me?.username ?? "…"}</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="truncate text-sm font-black uppercase tracking-wide">@{me?.username ?? "…"}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             Today {formatMinutes(seconds)}
-            {surveyStatus.submittedToday ? " · check-in done" : ""}
+            {surveyStatus.submittedToday ? " · done" : ""}
           </p>
-          <div className="mt-1 h-1 w-28 overflow-hidden rounded-full bg-foreground/20">
+          <div className="mt-1.5 h-1 w-28 overflow-hidden rounded-full bg-foreground/20">
             <div className="h-full bg-primary transition-[width]" style={{ width: `${progress * 100}%` }} />
           </div>
         </div>
@@ -126,22 +129,28 @@ function FeedPage() {
           {me?.isAdmin && (
             <Link
               to="/admin"
-              className="flex size-10 items-center justify-center rounded-full bg-background/60 backdrop-blur"
+              className="flex size-11 items-center justify-center rounded-full bg-foreground/10 backdrop-blur-md active:scale-90"
               aria-label="Admin"
             >
-              <Shield className="size-4" />
+              <Shield className="size-5" />
             </Link>
           )}
           <button
             type="button"
             onClick={signOut}
             aria-label="Sign out"
-            className="flex size-10 items-center justify-center rounded-full bg-background/60 backdrop-blur"
+            className="flex size-11 items-center justify-center rounded-full bg-foreground/10 backdrop-blur-md active:scale-90"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-5" />
           </button>
         </div>
       </header>
+
+      {muted && videos && videos.length > 0 && (
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/15 px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] backdrop-blur-md">
+          Tap for sound
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-full items-center justify-center">
