@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FeedVideo } from "@/components/FeedVideo";
 import { useCurrentUser, useSignOut } from "@/hooks/useCurrentUser";
 import { fetchSurveyStatus } from "@/lib/survey-status";
-import { SURVEY_THRESHOLD_SECONDS, localDate, seededShuffle, formatMinutes } from "@/lib/study";
+import { SURVEY_THRESHOLD_SECONDS, localDate, seededShuffle } from "@/lib/study";
 
 const FLUSH_INTERVAL = 15;
 
@@ -118,7 +118,6 @@ function FeedPage() {
     };
   }, [navigate]);
 
-  const progress = Math.min(1, seconds / SURVEY_THRESHOLD_SECONDS);
 
   return (
     <div
