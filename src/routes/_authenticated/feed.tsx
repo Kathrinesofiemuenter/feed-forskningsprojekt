@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FeedVideo } from "@/components/FeedVideo";
 import { useCurrentUser, useSignOut } from "@/hooks/useCurrentUser";
 import { fetchSurveyStatus } from "@/lib/survey-status";
-import { SURVEY_THRESHOLD_SECONDS, localDate, seededShuffle, formatMinutes } from "@/lib/study";
+import { SURVEY_THRESHOLD_SECONDS, localDate, seededShuffle } from "@/lib/study";
 
 const FLUSH_INTERVAL = 15;
 
@@ -118,7 +118,6 @@ function FeedPage() {
     };
   }, [navigate]);
 
-  const progress = Math.min(1, seconds / SURVEY_THRESHOLD_SECONDS);
 
   return (
     <div
@@ -128,13 +127,7 @@ function FeedPage() {
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-black via-black/50 to-transparent px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto min-w-0">
           <p className="truncate text-sm font-black uppercase tracking-wide">@{me?.username ?? "…"}</p>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Today {formatMinutes(seconds)}
-            {surveyStatus.submittedToday ? " · done" : ""}
-          </p>
-          <div className="mt-1.5 h-1 w-28 overflow-hidden rounded-full bg-foreground/20">
-            <div className="h-full bg-primary transition-[width]" style={{ width: `${progress * 100}%` }} />
-          </div>
+
         </div>
         <div className="pointer-events-auto flex items-center gap-2">
           {me?.isAdmin && (

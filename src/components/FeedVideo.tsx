@@ -82,11 +82,8 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
           <Play className="size-10 fill-current text-foreground" />
         </button>
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28">
-        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </p>
-      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
+
       <button
         type="button"
         onClick={onToggleMute}
