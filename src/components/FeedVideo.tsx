@@ -86,9 +86,6 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
         <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary">
           {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
         </p>
-        <h2 className="mt-2 line-clamp-2 max-w-[80%] text-2xl font-black uppercase leading-tight tracking-tight text-foreground">
-          {title}
-        </h2>
       </div>
       <button
         type="button"
