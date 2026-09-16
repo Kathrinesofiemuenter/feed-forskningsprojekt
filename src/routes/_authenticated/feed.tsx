@@ -121,10 +121,10 @@ function FeedPage() {
 
   return (
     <div
-      className="relative h-dvh w-full overflow-hidden bg-black"
+      className="relative h-dvh w-full overflow-hidden bg-background"
       onPointerDown={() => setMuted(false)}
     >
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-black via-black/50 to-transparent px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-background via-background/50 to-transparent px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto min-w-0">
           <p className="truncate text-sm font-black uppercase tracking-wide">@{me?.username ?? "…"}</p>
 

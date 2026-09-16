@@ -60,7 +60,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
   }
 
   return (
-    <section className="relative h-dvh w-full snap-start snap-always bg-black">
+    <section className="relative h-dvh w-full snap-start snap-always bg-background">
       <video
         ref={ref}
         src={src}
@@ -82,7 +82,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
           <Play className="size-10 fill-current text-foreground" />
         </button>
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
 
       <button
         type="button"
