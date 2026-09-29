@@ -177,7 +177,7 @@ function FeedPage() {
         <main className="snap-feed h-full w-full overflow-y-scroll">
           {videos.map((v, i) => (
             <FeedVideo
-              key={v.id}
+              key={`${v.id}-${i}`}
               src={v.url}
               title={v.title}
               index={i}
