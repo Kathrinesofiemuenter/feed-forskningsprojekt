@@ -60,6 +60,18 @@ function FeedPage() {
   const isAdminRef = useRef(isAdmin);
   isAdminRef.current = isAdmin;
 
+  // Redirect to the daily check-in the moment the local timer crosses 20 minutes,
+  // without waiting for a server flush.
+  useEffect(() => {
+    if (
+      seconds >= SURVEY_THRESHOLD_SECONDS &&
+      !submittedToday.current &&
+      !isAdminRef.current
+    ) {
+      navigate({ to: "/survey", replace: true });
+    }
+  }, [seconds, navigate]);
+
   useEffect(() => {
     let dateAtStart = localDate();
 
