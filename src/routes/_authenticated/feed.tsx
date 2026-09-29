@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FeedVideo } from "@/components/FeedVideo";
 import { useCurrentUser, useSignOut } from "@/hooks/useCurrentUser";
 import { fetchSurveyStatus } from "@/lib/survey-status";
-import { SURVEY_THRESHOLD_SECONDS, localDate, seededShuffle } from "@/lib/study";
+import { SURVEY_THRESHOLD_SECONDS, buildPlaylist, localDate } from "@/lib/study";
 
 const FLUSH_INTERVAL = 15;
 
@@ -31,7 +31,7 @@ async function fetchFeed(userId: string) {
     .order("sort_order")
     .order("created_at");
   if (error) throw error;
-  const ordered = seededShuffle(data ?? [], userId);
+  const ordered = buildPlaylist(data ?? [], userId);
   if (ordered.length === 0) return [];
   const { data: signed, error: signErr } = await supabase.storage
     .from("videos")
