@@ -58,6 +58,44 @@ export function seededShuffle<T>(items: T[], seed: string): T[] {
   return out;
 }
 
+/**
+ * Build a randomized playlist where each video may appear up to `maxRepeats`
+ * times in total and never twice in a row. Deterministic per seed.
+ */
+export function buildPlaylist<T extends { id: string }>(
+  videos: T[],
+  seed: string,
+  maxRepeats = 10,
+): T[] {
+  if (videos.length === 0) return [];
+  const pool: T[] = [];
+  for (const v of videos) {
+    for (let i = 0; i < maxRepeats; i++) pool.push(v);
+  }
+  const shuffled = seededShuffle(pool, seed);
+  // Repair pass: swap any item that equals its predecessor with a later
+  // non-conflicting item. With maxRepeats=10 and >=2 distinct videos a
+  // valid arrangement always exists.
+  for (let i = 1; i < shuffled.length; i++) {
+    if (shuffled[i]!.id !== shuffled[i - 1]!.id) continue;
+    let j = i + 1;
+    while (
+      j < shuffled.length &&
+      (shuffled[j]!.id === shuffled[i - 1]!.id ||
+        (j + 1 < shuffled.length && shuffled[j + 1]!.id === shuffled[i]!.id))
+    ) {
+      j++;
+    }
+    if (j < shuffled.length) {
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+    }
+  }
+  // Single-video edge case: only one distinct video, so adjacency is
+  // unavoidable; cap at one occurrence.
+  if (new Set(videos.map((v) => v.id)).size === 1) return [videos[0]!];
+  return shuffled;
+}
+
 export const USERNAME_RE = /^[a-z0-9_]{3,24}$/;
 
 export function usernameToEmail(username: string): string {
