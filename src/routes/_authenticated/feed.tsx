@@ -60,6 +60,24 @@ function FeedPage() {
   const isAdminRef = useRef(isAdmin);
   isAdminRef.current = isAdmin;
 
+  // Redirect to the daily check-in the moment the local timer crosses 20 minutes.
+  // Flush any un-synced seconds first so the survey page's server-side check agrees.
+  useEffect(() => {
+    if (
+      seconds >= SURVEY_THRESHOLD_SECONDS &&
+      !submittedToday.current &&
+      !isAdminRef.current
+    ) {
+      submittedToday.current = true; // guard against re-entry while flushing
+      const delta = pending.current;
+      pending.current = 0;
+      void (delta > 0
+        ? supabase.rpc("add_feed_usage", { _date: localDate(), _seconds: delta })
+        : Promise.resolve()
+      ).then(() => navigate({ to: "/survey", replace: true }));
+    }
+  }, [seconds, navigate]);
+
   useEffect(() => {
     let dateAtStart = localDate();
 
