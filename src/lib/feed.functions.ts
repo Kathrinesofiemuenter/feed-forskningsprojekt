@@ -21,7 +21,7 @@ export const signFeedUrls = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: signed, error: sErr } = await supabaseAdmin.storage
       .from("videos")
-      .createSignedUrls(allowed, 60 * 15);
+      .createSignedUrls(allowed, 60 * 60);
     if (sErr) throw new Error(sErr.message);
     const out: Record<string, string> = {};
     signed?.forEach((s) => {
