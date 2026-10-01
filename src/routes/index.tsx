@@ -17,13 +17,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Shorts Study – Short-video feed research" },
+      { title: "Feed-forskningsprojekt – Short-video feed research" },
       {
         name: "description",
         content:
           "A short-video feed research study. Watch a personalised feed, then answer a quick daily mood check-in. Participants only.",
       },
-      { property: "og:title", content: "Shorts Study – Short-video feed research" },
+      { property: "og:title", content: "Feed-forskningsprojekt – Short-video feed research" },
       {
         property: "og:description",
         content: "Watch a short-video feed, then complete a quick daily mood check-in.",
@@ -58,7 +58,7 @@ function Index() {
           <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Play className="size-3.5 fill-current" />
           </span>
-          Shorts Study
+          Feed-forskningsprojekt
         </div>
         <Link
           to="/auth"
@@ -204,7 +204,7 @@ function Index() {
             <ChevronRight className="size-5" />
           </Link>
           <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
-            Shorts Study · Research project
+            Feed-forskningsprojekt · Research project
           </p>
         </div>
       </section>

@@ -8,9 +8,9 @@ import { USERNAME_RE, usernameToEmail } from "@/lib/study";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in – Shorts Study" },
+      { title: "Sign in – Feed-forskningsprojekt" },
       { name: "description", content: "Sign in or create your participant account with a username." },
-      { property: "og:title", content: "Sign in – Shorts Study" },
+      { property: "og:title", content: "Sign in – Feed-forskningsprojekt" },
       { property: "og:description", content: "Sign in or create your participant account with a username." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -80,7 +80,7 @@ function AuthPage() {
           <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Play className="size-3.5 fill-current" />
           </span>
-          Shorts Study
+          Feed-forskningsprojekt
         </div>
 
         <h1 className="text-3xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
