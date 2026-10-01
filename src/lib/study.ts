@@ -59,41 +59,31 @@ export function seededShuffle<T>(items: T[], seed: string): T[] {
 }
 
 /**
- * Build a randomized playlist where each video appears exactly once.
- * Deterministic per seed.
+ * Build a randomized playlist where each video appears at most twice (never
+ * more) and never twice in a row. Deterministic per seed, so a participant
+ * always gets the same sequence.
  */
 export function buildPlaylist<T extends { id: string }>(
   videos: T[],
   seed: string,
-  maxRepeats = 1,
+  maxRepeats = 2,
 ): T[] {
   if (videos.length === 0) return [];
-  const pool: T[] = [];
-  for (const v of videos) {
-    for (let i = 0; i < maxRepeats; i++) pool.push(v);
-  }
-  const shuffled = seededShuffle(pool, seed);
-  // Repair pass: swap any item that equals its predecessor with a later
-  // non-conflicting item. With maxRepeats=10 and >=2 distinct videos a
-  // valid arrangement always exists.
-  for (let i = 1; i < shuffled.length; i++) {
-    if (shuffled[i]!.id !== shuffled[i - 1]!.id) continue;
-    let j = i + 1;
-    while (
-      j < shuffled.length &&
-      (shuffled[j]!.id === shuffled[i - 1]!.id ||
-        (j + 1 < shuffled.length && shuffled[j + 1]!.id === shuffled[i]!.id))
-    ) {
-      j++;
-    }
-    if (j < shuffled.length) {
-      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
-    }
-  }
-  // Single-video edge case: only one distinct video, so adjacency is
-  // unavoidable; cap at one occurrence.
+  // With a single video, a second showing would have to be back-to-back.
   if (new Set(videos.map((v) => v.id)).size === 1) return [videos[0]!];
-  return shuffled;
+
+  const pool: T[] = [];
+  for (let pass = 0; pass < maxRepeats; pass++) {
+    const order = seededShuffle(videos, `${seed}:${pass}`);
+    // Where two passes meet, the next one may start on the video the previous
+    // one ended on; rotating it by one fixes that, since a pass has no
+    // duplicates so its second item is always a different video.
+    if (pool.length > 0 && order[0]!.id === pool[pool.length - 1]!.id && order.length > 1) {
+      order.push(order.shift()!);
+    }
+    pool.push(...order);
+  }
+  return pool;
 }
 
 export const USERNAME_RE = /^[a-z0-9_]{3,24}$/;
