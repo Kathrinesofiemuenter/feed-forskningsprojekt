@@ -7,6 +7,7 @@ import { FeedVideo } from "@/components/FeedVideo";
 import { useCurrentUser, useSignOut } from "@/hooks/useCurrentUser";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { SURVEY_THRESHOLD_SECONDS, buildPlaylist, localDate } from "@/lib/study";
+import { signFeedUrls } from "@/lib/feed.functions";
 
 const FLUSH_INTERVAL = 15;
 
@@ -33,14 +34,8 @@ async function fetchFeed(userId: string) {
   if (error) throw error;
   const ordered = buildPlaylist(data ?? [], userId);
   if (ordered.length === 0) return [];
-  const { data: signed, error: signErr } = await supabase.storage
-    .from("videos")
-    .createSignedUrls(
-      ordered.map((v) => v.storage_path),
-      60 * 60 * 6,
-    );
-  if (signErr) throw signErr;
-  return ordered.map((v, i) => ({ ...v, url: signed?.[i]?.signedUrl ?? "" })).filter((v) => v.url);
+  const urls = await signFeedUrls({ data: { paths: ordered.map((v) => v.storage_path) } });
+  return ordered.map((v) => ({ ...v, url: urls[v.storage_path] ?? "" })).filter((v) => v.url);
 }
 
 function FeedPage() {
