@@ -60,11 +60,14 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
   }
 
   return (
-    <section className="relative h-dvh w-full snap-start snap-always bg-background">
+    <section className="relative h-dvh w-full snap-start snap-always overflow-hidden bg-background">
+      {/* Screen recordings carry the phone's status bar (clock, battery). Scaling up from
+          the bottom edge pushes that top strip out of view, cropping it for the viewer. */}
       <video
         ref={ref}
         src={src}
         className="h-full w-full object-cover"
+        style={{ transform: "scale(1.09)", transformOrigin: "50% 100%" }}
         loop
         playsInline
         muted={muted}
