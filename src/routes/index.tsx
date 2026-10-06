@@ -111,7 +111,7 @@ function Index() {
             <Step
               num={3}
               icon={<ClipboardList className="size-5" />}
-              title="Besvar den daglige spørgeskema"
+              title="Besvar det daglige spørgeskema"
               text="Efter 20 minutters visning får du seks hurtige spørgsmål om, hvordan du har det lige nu."
             />
           </ol>
