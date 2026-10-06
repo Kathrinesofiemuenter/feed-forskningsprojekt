@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import * as tus from "tus-js-client";
 
 const VIDEO_EXT = /\.(mp4|m4v|mov|webm|mkv|avi|3gp)$/i;
 
@@ -30,49 +31,59 @@ export async function freshToken(): Promise<string> {
 
 export const UPLOAD_CANCELLED = "Upload stoppet.";
 
-/** Upload with real progress reporting; retries once on network failure. */
+/**
+ * Resumable chunked upload (TUS, 6 MB pieces). A dropped connection only
+ * re-sends the current piece instead of restarting the whole file.
+ */
 export async function uploadVideoWithProgress(
   path: string,
   file: File,
   onProgress: (pct: number) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/videos/${encodeURIComponent(path)}`;
+  const base = import.meta.env['VITE_SUPABASE_URL'] as string;
   const key = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
-
-  const attempt = async () => {
-    const token = await freshToken();
-    return new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", url);
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.setRequestHeader("apikey", key);
-      xhr.setRequestHeader("Content-Type", guessVideoType(file));
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-      };
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) return resolve();
-        let msg = `HTTP ${xhr.status}`;
-        try {
-          msg = JSON.parse(xhr.responseText).message ?? msg;
-        } catch {}
-        reject(new Error(xhr.status === 413 ? "Filen er for stor (maks 200 MB)." : friendlyError(msg)));
-      };
-      xhr.onerror = () => reject(new Error("network"));
-      xhr.onabort = () => reject(new Error(UPLOAD_CANCELLED));
-      signal?.addEventListener("abort", () => xhr.abort(), { once: true });
-      xhr.send(file);
+  let token = await freshToken();
+  await new Promise<void>((resolve, reject) => {
+    const upload = new tus.Upload(file, {
+      endpoint: `${base}/storage/v1/upload/resumable`,
+      retryDelays: [0, 1000, 3000, 5000, 10000, 20000],
+      chunkSize: 6 * 1024 * 1024,
+      removeFingerprintOnSuccess: true,
+      uploadDataDuringCreation: true,
+      headers: { apikey: key, "x-upsert": "false" },
+      metadata: {
+        bucketName: "videos",
+        objectName: path,
+        contentType: guessVideoType(file),
+        cacheControl: "3600",
+      },
+      onBeforeRequest: async (req) => {
+        req.setHeader("Authorization", `Bearer ${token}`);
+      },
+      onShouldRetry: (err) => {
+        const s = (err as tus.DetailedError).originalResponse?.getStatus();
+        if (s === 401 || s === 403) {
+          freshToken().then((t) => (token = t)).catch(() => {});
+        }
+        return !signal?.aborted && s !== 413;
+      },
+      onProgress: (sent, total) => onProgress(Math.round((sent / total) * 100)),
+      onError: (err) => {
+        if (signal?.aborted) return reject(new Error(UPLOAD_CANCELLED));
+        const s = (err as tus.DetailedError).originalResponse?.getStatus();
+        if (s === 413) return reject(new Error("Filen er for stor (maks 200 MB)."));
+        reject(new Error(s ? friendlyError(err.message) : "Forbindelsen blev afbrudt."));
+      },
+      onSuccess: () => resolve(),
     });
-  };
-
-  try {
-    await attempt();
-  } catch (e) {
-    if ((e as Error).message !== "network" || signal?.aborted) throw e;
-    onProgress(0);
-    await attempt().catch((e2: Error) => {
-      throw new Error(e2.message === "network" ? "Forbindelsen blev afbrudt." : e2.message);
+    signal?.addEventListener("abort", () => {
+      upload.abort(true).catch(() => {});
+      reject(new Error(UPLOAD_CANCELLED));
+    }, { once: true });
+    upload.findPreviousUploads().then((prev) => {
+      const p = prev[0]; if (p) upload.resumeFromPreviousUpload(p);
+      upload.start();
     });
-  }
+  });
 }
