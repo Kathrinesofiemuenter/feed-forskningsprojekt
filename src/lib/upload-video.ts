@@ -23,8 +23,8 @@ export async function uploadVideoWithProgress(
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error("Du er ikke logget ind.");
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/videos/${encodeURIComponent(path)}`;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/videos/${encodeURIComponent(path)}`;
+  const key = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
 
   const attempt = () =>
     new Promise<void>((resolve, reject) => {
