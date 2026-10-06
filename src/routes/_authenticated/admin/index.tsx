@@ -4,7 +4,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isVideoFile, uploadVideoWithProgress } from "@/lib/upload-video";
+import { isVideoFile, uploadVideoWithProgress, freshToken, friendlyError } from "@/lib/upload-video";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminVideos,
@@ -76,12 +76,13 @@ function AdminVideos() {
         return;
       }
       const title = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+      await freshToken().catch(() => {});
       const { error: dbErr } = await supabase.from("videos").insert({
         title,
         storage_path: path,
         uploaded_by: auth.user?.id ?? null,
       });
-      if (dbErr) toast.error(`Saved file but could not register ${file.name}.`);
+      if (dbErr) toast.error(`${file.name}: ${friendlyError(dbErr.message)}`);
       else qc.invalidateQueries({ queryKey: ["admin-videos"] });
     }
 
