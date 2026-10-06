@@ -12,7 +12,7 @@ export const SURVEY_ITEMS = [
 
 export type SurveyKey = (typeof SURVEY_ITEMS)[number]["key"];
 
-/** Answer scale: 1 (Slet ikke) to 5 (Ekstremt). */
+/** Answer scale: 1 (Slet ikke) to 5 (I meget høj grad). */
 export const LIKERT_MIN = 1;
 export const LIKERT_MAX = 5;
 
@@ -21,7 +21,7 @@ export const LIKERT_LABELS: Record<number, string> = {
   2: "I lille grad",
   3: "I nogen grad",
   4: "I høj grad",
-  5: "Ekstremt",
+  5: "I meget høj grad",
 };
 
 /** Local calendar day as YYYY-MM-DD (participant's device time zone). */

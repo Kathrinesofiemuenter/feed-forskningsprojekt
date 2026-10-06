@@ -10,6 +10,7 @@ import {
   UserCircle2,
   ChevronRight,
   LogIn,
+  Volume2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "En forskningsundersøgelse om, hvordan et feed med korte videoer påvirker dit humør. Kun for deltagere.",
+          "En forskningsundersøgelse om, hvordan et feed med korte videoer påvirker din trivsel. Kun for deltagere.",
       },
       { property: "og:title", content: "Feed-forskningsprojekt – Forskningsfeed med korte videoer" },
       {
@@ -76,7 +77,7 @@ function Index() {
             Daglig check-in
           </h1>
           <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-            En forskningsundersøgelse, der ser på, hvordan et feed med korte videoer påvirker dit humør. Du skal
+            En forskningsundersøgelse, der ser på, hvordan et feed med korte videoer påvirker din trivsel. Du skal
             scrolle gennem et feed og derefter besvare seks korte spørgsmål om, hvordan du har det.
           </p>
           <Link
@@ -87,7 +88,7 @@ function Index() {
             <ChevronRight className="size-5" />
           </Link>
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Kun for deltagere · Tilmeld dig med et brugernavn – ingen e-mailadresse kræves
+            Kun for deltagere · login med et udleveret brugernavn
           </p>
         </div>
       </section>
@@ -123,9 +124,9 @@ function Index() {
           <SectionLabel>Feedet</SectionLabel>
           <div className="mt-4 space-y-3">
             <Feature icon={<Smartphone className="size-5" />} title="Stryg for at rulle">
-              Lodrette videoer i fuld skærm, der vises én ad gangen, ligesom i de kortvideo-apps, du kender.
-              <br />
-              <br />
+              Lodrette videoer i fuld skærm, der vises én ad gangen, ligesom på de sociale medier, du kender.
+            </Feature>
+            <Feature icon={<Volume2 className="size-5" />} title="Lyd">
               Videoerne afspilles med lyd. Tryk på skærmen for at slå lyden til, hvis den er slået fra.
             </Feature>
           </div>
@@ -134,15 +135,15 @@ function Index() {
 
       <section className="relative z-10 px-6 pt-16">
         <div className="mx-auto max-w-sm">
-          <SectionLabel>Den daglige check-in</SectionLabel>
+          <SectionLabel>Det daglige check-in</SectionLabel>
           <div className="mt-4 space-y-3">
             <Feature icon={<Timer className="size-5" />} title="Efter 20 minutter">
               Når du har set videoer i alt 20 minutter på en dag, vises check-in på skærmen. Dette tæller én gang pr.
               kalenderdag og nulstilles den næste dag.
             </Feature>
             <Feature icon={<ClipboardList className="size-5" />} title="Seks hurtige spørgsmål">
-              For hvert spørgsmål svarer du på, hvordan du har det lige nu, fra 1 (Slet ikke) til 5 (Ekstremt): glad,
-              tilfreds, håbefuld, bekymret, ensom og irritabel.
+              For hvert spørgsmål svarer du på, hvordan du har det lige nu, fra 1 (Slet ikke) til 5 (I meget høj
+              grad): glad, tilfreds, håbefuld, bekymret, ensom og irritabel.
             </Feature>
             <Feature icon={<Lock className="size-5" />} title="Påkrævet for at fortsætte.">
               Du kan ikke vende tilbage til feedet, før alle spørgsmål er besvaret. Der er kun én check-in om dagen.
@@ -176,7 +177,7 @@ function Index() {
             </ul>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            Ved at oprette en konto bekræfter du, at du forstår ovenstående og accepterer at deltage.
+            Ved at deltage bekræfter du, at du forstår ovenstående og accepterer det.
           </p>
           <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
             Feed-forskningsprojekt · Forskningsprojekt

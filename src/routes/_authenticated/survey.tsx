@@ -112,7 +112,7 @@ function SurveyPage() {
               </div>
               <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
                 <span>1 · Slet ikke</span>
-                <span>5 · Ekstremt</span>
+                <span>5 · I meget høj grad</span>
               </div>
             </li>
           );
