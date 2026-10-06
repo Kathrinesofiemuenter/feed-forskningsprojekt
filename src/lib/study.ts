@@ -2,22 +2,27 @@
 export const SURVEY_THRESHOLD_SECONDS = 20 * 60;
 
 export const SURVEY_ITEMS = [
-  { key: "happy", word: "happy" },
-  { key: "optimistic", word: "optimistic" },
-  { key: "lively", word: "lively" },
-  { key: "tense", word: "tense" },
-  { key: "nervous", word: "nervous" },
-  { key: "anxious", word: "anxious" },
+  { key: "glad", label: "glad", question: "Vurder venligst, hvor glad du føler dig lige nu" },
+  { key: "tilfreds", label: "tilfreds", question: "Vurder venligst, hvor tilfreds du føler dig lige nu" },
+  { key: "haebefuld", label: "håbefuld", question: "Vurder venligst, hvor håbefuld du føler dig lige nu" },
+  { key: "bekymret", label: "bekymret", question: "Vurder venligst, hvor bekymret du føler dig lige nu" },
+  { key: "ensom", label: "ensom", question: "Vurder venligst, hvor ensom du føler dig lige nu" },
+  { key: "irritabel", label: "irritabel", question: "Vurder venligst, hvor irritabel du føler dig lige nu" },
 ] as const;
 
 export type SurveyKey = (typeof SURVEY_ITEMS)[number]["key"];
 
+/** Answer scale: 0 (Slet ikke) to 5 (Ekstremt). */
+export const LIKERT_MIN = 0;
+export const LIKERT_MAX = 5;
+
 export const LIKERT_LABELS: Record<number, string> = {
-  1: "Not at all",
-  2: "Slightly",
-  3: "Moderately",
-  4: "Quite a bit",
-  5: "Very much",
+  0: "Slet ikke",
+  1: "I lille grad",
+  2: "I nogen grad",
+  3: "I ret høj grad",
+  4: "I høj grad",
+  5: "Ekstremt",
 };
 
 /** Local calendar day as YYYY-MM-DD (participant's device time zone). */
