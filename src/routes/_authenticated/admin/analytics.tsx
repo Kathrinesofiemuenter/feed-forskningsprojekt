@@ -115,7 +115,7 @@ function Analytics() {
         <div>
           <h2 className="text-2xl font-bold">Survey responses</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {rows?.length ?? 0} responses from {participants} participant{participants === 1 ? "" : "s"}. Scale 0 =
+            {rows?.length ?? 0} responses from {participants} participant{participants === 1 ? "" : "s"}. Scale 1 =
             Slet ikke, 5 = Ekstremt.
           </p>
         </div>
