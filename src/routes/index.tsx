@@ -149,8 +149,8 @@ function Index() {
               calendar day and resets the next day.
             </Feature>
             <Feature icon={<ClipboardList className="size-5" />} title="Six quick questions">
-              For each you answer how you feel right now, from 1 (Not at all) to 5 (Very much): happy, optimistic,
-              lively, tense, nervous and anxious.
+              For each you answer how you feel right now, on a scale from 0 (Slet ikke) to 5 (Ekstremt): glad,
+              tilfreds, håbefuld, bekymret, ensom and irritabel.
             </Feature>
             <Feature icon={<Lock className="size-5" />} title="Required to continue">
               You can't return to the feed until every question is answered. It's just one check-in per day.
