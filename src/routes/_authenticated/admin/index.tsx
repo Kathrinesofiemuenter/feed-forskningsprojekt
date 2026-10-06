@@ -4,6 +4,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { isVideoFile, uploadVideoWithProgress } from "@/lib/upload-video";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminVideos,
@@ -31,6 +32,7 @@ function AdminVideos() {
   const qc = useQueryClient();
   const { data: videos, isLoading } = useQuery({ queryKey: ["admin-videos"], queryFn: fetchVideos });
   const [uploading, setUploading] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -39,20 +41,26 @@ function AdminVideos() {
     e.target.value = "";
     if (files.length === 0) return;
     const { data: auth } = await supabase.auth.getUser();
+    let i = 0;
     for (const file of files) {
-      if (!file.type.startsWith("video/")) {
+      i++;
+      const label = files.length > 1 ? `${file.name} (${i}/${files.length})` : file.name;
+      if (!isVideoFile(file)) {
         toast.error(`${file.name} is not a video file.`);
         continue;
       }
-      setUploading(file.name);
+      if (file.size > 200 * 1024 * 1024) {
+        toast.error(`${file.name} is larger than 200 MB.`);
+        continue;
+      }
+      setUploading(label);
+      setProgress(0);
       const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${crypto.randomUUID()}-${safe}`;
-      const { error: upErr } = await supabase.storage.from("videos").upload(path, file, {
-        contentType: file.type,
-        upsert: false,
-      });
-      if (upErr) {
-        toast.error(`Upload failed for ${file.name}: ${upErr.message}`);
+      try {
+        await uploadVideoWithProgress(path, file, setProgress);
+      } catch (err) {
+        toast.error(`Upload failed for ${file.name}: ${(err as Error).message}`);
         continue;
       }
       const title = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
@@ -66,6 +74,7 @@ function AdminVideos() {
         continue;
       }
       toast.success(`Uploaded ${file.name}`);
+      qc.invalidateQueries({ queryKey: ["admin-videos"] });
     }
     setUploading(null);
     qc.invalidateQueries({ queryKey: ["admin-videos"] });
@@ -128,7 +137,14 @@ function AdminVideos() {
             their own random order.
           </p>
         </div>
-        <input ref={fileRef} type="file" accept="video/*" multiple hidden onChange={onFiles} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="video/*,.mov,.mp4,.m4v,.webm"
+          multiple
+          hidden
+          onChange={onFiles}
+        />
         <button
           type="button"
           disabled={uploading !== null}
@@ -136,9 +152,21 @@ function AdminVideos() {
           className="flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 disabled:opacity-60"
         >
           {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-          {uploading ? `Uploading ${uploading}…` : "Upload videos"}
+          {uploading ? `Uploading… ${progress}%` : "Upload videos"}
         </button>
       </div>
+      {uploading && (
+        <div className="mt-4 rounded-2xl border border-border bg-card p-3">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span className="truncate">{uploading}</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Keep this page open until the upload finishes.</p>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="mt-10 flex justify-center">
