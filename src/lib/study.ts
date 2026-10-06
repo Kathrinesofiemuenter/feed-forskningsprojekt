@@ -12,15 +12,14 @@ export const SURVEY_ITEMS = [
 
 export type SurveyKey = (typeof SURVEY_ITEMS)[number]["key"];
 
-/** Answer scale: 0 (Slet ikke) to 5 (Ekstremt). */
-export const LIKERT_MIN = 0;
+/** Answer scale: 1 (Slet ikke) to 5 (Ekstremt). */
+export const LIKERT_MIN = 1;
 export const LIKERT_MAX = 5;
 
 export const LIKERT_LABELS: Record<number, string> = {
-  0: "Slet ikke",
-  1: "I lille grad",
-  2: "I nogen grad",
-  3: "I ret høj grad",
+  1: "Slet ikke",
+  2: "I lille grad",
+  3: "I nogen grad",
   4: "I høj grad",
   5: "Ekstremt",
 };

@@ -88,7 +88,7 @@ function SurveyPage() {
                 <span className="mr-2 text-muted-foreground">{idx + 1}.</span>
                 {item.question}?
               </p>
-              <div role="radiogroup" aria-label={item.label} className="mt-4 grid grid-cols-6 gap-1.5">
+              <div role="radiogroup" aria-label={item.label} className="mt-4 grid grid-cols-5 gap-1.5">
                 {scale.map((n) => {
                   const selected = value === n;
                   return (
@@ -111,7 +111,7 @@ function SurveyPage() {
                 })}
               </div>
               <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                <span>0 · Slet ikke</span>
+                <span>1 · Slet ikke</span>
                 <span>5 · Ekstremt</span>
               </div>
             </li>
