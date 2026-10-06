@@ -44,7 +44,6 @@ export async function uploadVideoWithProgress(
       xhr.open("POST", url);
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       xhr.setRequestHeader("apikey", key);
-      xhr.setRequestHeader("x-upsert", "true");
       xhr.setRequestHeader("Content-Type", guessVideoType(file));
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
