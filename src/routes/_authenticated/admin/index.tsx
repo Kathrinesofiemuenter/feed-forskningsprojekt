@@ -4,7 +4,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { isVideoFile, uploadVideoWithProgress, freshToken, friendlyError } from "@/lib/upload-video";
+import { isVideoFile, uploadVideoWithProgress, freshToken, friendlyError, UPLOAD_CANCELLED } from "@/lib/upload-video";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminVideos,
@@ -35,6 +35,7 @@ function AdminVideos() {
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   async function onFiles(e: ChangeEvent<HTMLInputElement>) {
     const all = Array.from(e.target.files ?? []);
@@ -51,6 +52,8 @@ function AdminVideos() {
       return true;
     });
     if (files.length === 0) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     const { data: auth } = await supabase.auth.getUser();
     const total = files.reduce((s, f) => s + f.size, 0);
     const loaded = new Map<File, number>();
@@ -69,9 +72,11 @@ function AdminVideos() {
         await uploadVideoWithProgress(path, file, (pct) => {
           loaded.set(file, (file.size * pct) / 100);
           update();
-        });
+        }, controller.signal);
       } catch (err) {
-        toast.error(`Upload failed for ${file.name}: ${(err as Error).message}`);
+        if ((err as Error).message !== UPLOAD_CANCELLED) {
+          toast.error(`Upload failed for ${file.name}: ${(err as Error).message}`);
+        }
         loaded.set(file, file.size);
         return;
       }
@@ -89,7 +94,7 @@ function AdminVideos() {
     // Upload up to 3 files at the same time.
     const queue = [...files];
     const worker = async () => {
-      while (queue.length) {
+      while (queue.length && !controller.signal.aborted) {
         const f = queue.shift()!;
         await uploadOne(f);
         done++;
@@ -97,7 +102,9 @@ function AdminVideos() {
       }
     };
     await Promise.all(Array.from({ length: Math.min(3, files.length) }, worker));
-    toast.success(`Finished uploading ${files.length} video${files.length > 1 ? "s" : ""}`);
+    if (controller.signal.aborted) toast("Upload stoppet.");
+    else toast.success(`Finished uploading ${files.length} video${files.length > 1 ? "s" : ""}`);
+    abortRef.current = null;
     setUploading(null);
     qc.invalidateQueries({ queryKey: ["admin-videos"] });
     qc.invalidateQueries({ queryKey: ["feed"] });
@@ -186,7 +193,16 @@ function AdminVideos() {
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Keep this page open until the upload finishes.</p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">Keep this page open until the upload finishes.</p>
+            <button
+              type="button"
+              onClick={() => abortRef.current?.abort()}
+              className="shrink-0 rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-destructive/20 hover:text-destructive"
+            >
+              Stop upload
+            </button>
+          </div>
         </div>
       )}
 
