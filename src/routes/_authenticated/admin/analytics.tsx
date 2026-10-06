@@ -13,12 +13,12 @@ type ResponseRow = {
   id: string;
   username: string;
   survey_date: string;
-  happy: number;
-  optimistic: number;
-  lively: number;
-  tense: number;
-  nervous: number;
-  anxious: number;
+  glad: number;
+  tilfreds: number;
+  haebefuld: number;
+  bekymret: number;
+  ensom: number;
+  irritabel: number;
   feed_seconds_at_submit: number | null;
   submitted_at: string;
 };
@@ -29,7 +29,7 @@ async function fetchResponses(): Promise<ResponseRow[]> {
   const { data, error } = await supabase
     .from("survey_responses")
     .select(
-      "id, username, survey_date, happy, optimistic, lively, tense, nervous, anxious, feed_seconds_at_submit, submitted_at",
+      "id, username, survey_date, glad, tilfreds, haebefuld, bekymret, ensom, irritabel, feed_seconds_at_submit, submitted_at",
     )
     .order("submitted_at", { ascending: false })
     .limit(5000);
@@ -115,8 +115,8 @@ function Analytics() {
         <div>
           <h2 className="text-2xl font-bold">Survey responses</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {rows?.length ?? 0} responses from {participants} participant{participants === 1 ? "" : "s"}. Scale 1 =
-            Not at all, 5 = Very much.
+            {rows?.length ?? 0} responses from {participants} participant{participants === 1 ? "" : "s"}. Scale 0 =
+            Slet ikke, 5 = Ekstremt.
           </p>
         </div>
         <button
@@ -156,7 +156,7 @@ function Analytics() {
                 </th>
                 {SURVEY_ITEMS.map((i) => (
                   <th key={i.key} className="px-3 py-3 text-center font-semibold">
-                    {i.key}
+                    {i.label}
                   </th>
                 ))}
                 <th className="px-4 py-3 text-right font-semibold">feed min</th>

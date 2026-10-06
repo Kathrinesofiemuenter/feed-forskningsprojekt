@@ -58,44 +58,44 @@ export type Database = {
       }
       survey_responses: {
         Row: {
-          anxious: number
+          bekymret: number
+          ensom: number
           feed_seconds_at_submit: number | null
-          happy: number
+          glad: number
+          haebefuld: number
           id: string
-          lively: number
-          nervous: number
-          optimistic: number
+          irritabel: number
           submitted_at: string
           survey_date: string
-          tense: number
+          tilfreds: number
           user_id: string
           username: string
         }
         Insert: {
-          anxious: number
+          bekymret: number
+          ensom: number
           feed_seconds_at_submit?: number | null
-          happy: number
+          glad: number
+          haebefuld: number
           id?: string
-          lively: number
-          nervous: number
-          optimistic: number
+          irritabel: number
           submitted_at?: string
           survey_date: string
-          tense: number
+          tilfreds: number
           user_id: string
           username: string
         }
         Update: {
-          anxious?: number
+          bekymret?: number
+          ensom?: number
           feed_seconds_at_submit?: number | null
-          happy?: number
+          glad?: number
+          haebefuld?: number
           id?: string
-          lively?: number
-          nervous?: number
-          optimistic?: number
+          irritabel?: number
           submitted_at?: string
           survey_date?: string
-          tense?: number
+          tilfreds?: number
           user_id?: string
           username?: string
         }

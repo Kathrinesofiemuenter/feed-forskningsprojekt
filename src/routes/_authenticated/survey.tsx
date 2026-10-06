@@ -5,7 +5,7 @@ import { Loader2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
-import { LIKERT_LABELS, SURVEY_ITEMS, type SurveyKey } from "@/lib/study";
+import { LIKERT_LABELS, LIKERT_MAX, LIKERT_MIN, SURVEY_ITEMS, type SurveyKey } from "@/lib/study";
 
 export const Route = createFileRoute("/_authenticated/survey")({
   beforeLoad: async ({ context }) => {
@@ -32,7 +32,7 @@ function SurveyPage() {
 
   async function submit() {
     if (!complete) {
-      toast.error("Please answer every question before continuing.");
+      toast.error("Svar venligst på alle spørgsmålene, før du fortsætter.");
       return;
     }
     setBusy(true);
@@ -46,12 +46,12 @@ function SurveyPage() {
       user_id: user.id,
       username: me.username,
       survey_date: surveyStatus.date,
-      happy: answers.happy!,
-      optimistic: answers.optimistic!,
-      lively: answers.lively!,
-      tense: answers.tense!,
-      nervous: answers.nervous!,
-      anxious: answers.anxious!,
+      glad: answers.glad!,
+      tilfreds: answers.tilfreds!,
+      haebefuld: answers.haebefuld!,
+      bekymret: answers.bekymret!,
+      ensom: answers.ensom!,
+      irritabel: answers.irritabel!,
       feed_seconds_at_submit: surveyStatus.secondsToday,
     });
     setBusy(false);
@@ -60,21 +60,23 @@ function SurveyPage() {
         navigate({ to: "/feed", replace: true });
         return;
       }
-      toast.error("Could not save your answers. Please try again.");
+      toast.error("Kunne ikke gemme dine svar. Prøv venligst igen.");
       return;
     }
-    toast.success("Thanks! Your check-in is saved.");
+    toast.success("Tak! Din besvarelse er gemt.");
     navigate({ to: "/feed", replace: true });
   }
+
+  const scale = Array.from({ length: LIKERT_MAX - LIKERT_MIN + 1 }, (_, i) => LIKERT_MIN + i);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-32 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <div className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-        <Lock className="size-3.5" /> Daily check-in
+        <Lock className="size-3.5" /> Daglig check-in
       </div>
-      <h1 className="text-3xl font-bold leading-tight">How are you feeling right now?</h1>
+      <h1 className="text-3xl font-bold leading-tight">Hvordan har du det lige nu?</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        You've watched 20 minutes today. Answer all six questions to return to the feed.
+        Du har set 20 minutter i dag. Svar på alle seks spørgsmål for at vende tilbage til feedet.
       </p>
 
       <ol className="mt-8 space-y-8">
@@ -84,10 +86,10 @@ function SurveyPage() {
             <li key={item.key} className="rounded-2xl border border-border bg-card p-4">
               <p className="text-base font-semibold">
                 <span className="mr-2 text-muted-foreground">{idx + 1}.</span>
-                To what extent do you feel <span className="text-primary">{item.word}</span> right now?
+                {item.question}?
               </p>
-              <div role="radiogroup" aria-label={item.word} className="mt-4 grid grid-cols-5 gap-2">
-                {[1, 2, 3, 4, 5].map((n) => {
+              <div role="radiogroup" aria-label={item.label} className="mt-4 grid grid-cols-6 gap-1.5">
+                {scale.map((n) => {
                   const selected = value === n;
                   return (
                     <button
@@ -109,8 +111,8 @@ function SurveyPage() {
                 })}
               </div>
               <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                <span>1 · Not at all</span>
-                <span>5 · Very much</span>
+                <span>0 · Slet ikke</span>
+                <span>5 · Ekstremt</span>
               </div>
             </li>
           );
@@ -126,7 +128,7 @@ function SurveyPage() {
             className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {complete ? "Submit and return to feed" : `Answered ${answered} of ${SURVEY_ITEMS.length}`}
+            {complete ? "Indsend og vend tilbage til feedet" : `Besvaret ${answered} af ${SURVEY_ITEMS.length}`}
           </button>
         </div>
       </div>

@@ -5,3 +5,4 @@
 - [x] Cap each video at two showings per participant, never back-to-back.
 - [x] Stop visitors without an account from opening stored video files.
 - [x] Participants can only view videos via temporary server-issued links (no direct file access)
+- [x] Translate the daily check-in to Danish (glad, tilfreds, håbefuld, bekymret, ensom, irritabel) and change the scale to 0–5.
