@@ -3,30 +3,29 @@ import { useEffect } from "react";
 import {
   Play,
   Smartphone,
-  Shuffle,
-  Volume2,
   ClipboardList,
   Timer,
   Lock,
   ShieldCheck,
   UserCircle2,
   ChevronRight,
+  LogIn,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Feed-forskningsprojekt – Short-video feed research" },
+      { title: "Feed-forskningsprojekt – Forskningsfeed med korte videoer" },
       {
         name: "description",
         content:
-          "A short-video feed research study. Watch a personalised feed, then answer a quick daily mood check-in. Participants only.",
+          "En forskningsundersøgelse om, hvordan et feed med korte videoer påvirker dit humør. Kun for deltagere.",
       },
-      { property: "og:title", content: "Feed-forskningsprojekt – Short-video feed research" },
+      { property: "og:title", content: "Feed-forskningsprojekt – Forskningsfeed med korte videoer" },
       {
         property: "og:description",
-        content: "Watch a short-video feed, then complete a quick daily mood check-in.",
+        content: "Se korte videoer og besvar en daglig check-in om dit humør.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -64,147 +63,123 @@ function Index() {
           to="/auth"
           className="rounded-full border border-border px-4 py-1.5 text-xs font-semibold text-foreground transition hover:bg-accent active:scale-95"
         >
-          Sign in
+          Login
         </Link>
       </header>
 
-      {/* Hero */}
       <section className="relative z-10 px-6 pt-12">
         <div className="mx-auto max-w-sm">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-primary">Research feed</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-primary">Forskningsfeed</p>
           <h1 className="text-[2.6rem] font-black leading-[0.98] tracking-tight">
-            Watch shorts.
+            Se korte videoer.
             <br />
-            Check in daily.
+            Daglig check-in
           </h1>
           <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-            A research study looking at how a short-video feed affects your mood. You'll scroll a personalised feed,
-            then answer six quick questions about how you feel.
+            En forskningsundersøgelse, der ser på, hvordan et feed med korte videoer påvirker dit humør. Du skal
+            scrolle gennem et feed og derefter besvare seks korte spørgsmål om, hvordan du har det.
           </p>
           <Link
             to="/auth"
             className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98]"
           >
-            Get started
+            Kom i gang
             <ChevronRight className="size-5" />
           </Link>
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Participants only · Sign up with a username, no email needed
+            Kun for deltagere · Tilmeld dig med et brugernavn – ingen e-mailadresse kræves
           </p>
         </div>
       </section>
 
-      {/* How it works */}
       <section className="relative z-10 px-6 pt-16">
         <div className="mx-auto max-w-sm">
-          <h2 className="text-xl font-bold tracking-tight">How it works</h2>
+          <h2 className="text-xl font-bold tracking-tight">Sådan fungerer det:</h2>
           <ol className="mt-5 space-y-4">
             <Step
               num={1}
-              icon={<UserCircle2 className="size-5" />}
-              title="Create your account"
-              text="Pick a username and password. That's it — no email or personal details required."
+              icon={<LogIn className="size-5" />}
+              title="Login"
+              text="Login med udleveret brugernavn og adgangskode. Det er alt – du behøver hverken e-mailadresse eller personlige oplysninger."
             />
             <Step
               num={2}
               icon={<Smartphone className="size-5" />}
-              title="Watch the feed"
-              text="Swipe through short videos, one at a time. The order is randomised just for you."
+              title="Se feedet"
+              text="Bladr gennem korte videoer, én ad gangen."
             />
             <Step
               num={3}
               icon={<ClipboardList className="size-5" />}
-              title="Answer the daily check-in"
-              text="After 20 minutes of watching, six quick questions about how you feel right now."
+              title="Besvar den daglige spørgeskema"
+              text="Efter 20 minutters visning får du seks hurtige spørgsmål om, hvordan du har det lige nu."
             />
           </ol>
         </div>
       </section>
 
-      {/* The feed */}
       <section className="relative z-10 px-6 pt-16">
         <div className="mx-auto max-w-sm">
-          <SectionLabel>The feed</SectionLabel>
+          <SectionLabel>Feedet</SectionLabel>
           <div className="mt-4 space-y-3">
-            <Feature icon={<Smartphone className="size-5" />} title="Swipe to move">
-              Full-screen vertical videos that snap one at a time, just like the short-video apps you know.
-            </Feature>
-            <Feature icon={<Shuffle className="size-5" />} title="Your own order">
-              Videos are shuffled into a random order for each participant, and yours stays the same across sessions.
-            </Feature>
-            <Feature icon={<Volume2 className="size-5" />} title="Sound included">
-              Videos play with sound. Tap the screen to turn sound on if it's muted.
+            <Feature icon={<Smartphone className="size-5" />} title="Stryg for at rulle">
+              Lodrette videoer i fuld skærm, der vises én ad gangen, ligesom i de kortvideo-apps, du kender.
+              <br />
+              <br />
+              Videoerne afspilles med lyd. Tryk på skærmen for at slå lyden til, hvis den er slået fra.
             </Feature>
           </div>
         </div>
       </section>
 
-      {/* The daily check-in */}
       <section className="relative z-10 px-6 pt-16">
         <div className="mx-auto max-w-sm">
-          <SectionLabel>The daily check-in</SectionLabel>
+          <SectionLabel>Den daglige check-in</SectionLabel>
           <div className="mt-4 space-y-3">
-            <Feature icon={<Timer className="size-5" />} title="After 20 minutes">
-              Once you've watched for 20 minutes total in a day, the check-in appears. This is counted once per
-              calendar day and resets the next day.
+            <Feature icon={<Timer className="size-5" />} title="Efter 20 minutter">
+              Når du har set videoer i alt 20 minutter på en dag, vises check-in på skærmen. Dette tæller én gang pr.
+              kalenderdag og nulstilles den næste dag.
             </Feature>
-            <Feature icon={<ClipboardList className="size-5" />} title="Six quick questions">
-              For each you answer how you feel right now, on a scale from 1 (Slet ikke) to 5 (Ekstremt): glad,
-              tilfreds, håbefuld, bekymret, ensom and irritabel.
+            <Feature icon={<ClipboardList className="size-5" />} title="Seks hurtige spørgsmål">
+              For hvert spørgsmål svarer du på, hvordan du har det lige nu, fra 1 (Slet ikke) til 5 (Meget): glad,
+              tilfreds, håbefuld, bekymret, ensom og irritabel.
             </Feature>
-            <Feature icon={<Lock className="size-5" />} title="Required to continue">
-              You can't return to the feed until every question is answered. It's just one check-in per day.
+            <Feature icon={<Lock className="size-5" />} title="Påkrævet for at fortsætte.">
+              Du kan ikke vende tilbage til feedet, før alle spørgsmål er besvaret. Der er kun én check-in om dagen.
             </Feature>
           </div>
         </div>
       </section>
 
-      {/* What you're agreeing to */}
-      <section className="relative z-10 px-6 pt-16">
+      <section className="relative z-10 px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-16">
         <div className="mx-auto max-w-sm">
-          <SectionLabel>What you're agreeing to</SectionLabel>
+          <SectionLabel>Hvad du accepterer</SectionLabel>
           <div className="mt-4 rounded-2xl border border-border bg-card p-5">
             <ul className="space-y-3 text-sm leading-relaxed text-card-foreground">
               <ConsentRow icon={<UserCircle2 className="size-4 shrink-0" />}>
-                You take part using a username and password of your choice — no email address is needed.
+                Du deltager ved hjælp af et brugernavn og en adgangskode.
               </ConsentRow>
               <ConsentRow icon={<Smartphone className="size-4 shrink-0" />}>
-                You'll watch a personalised short-video feed in a random order set for you.
+                Du vil se et feed med korte videoer i en tilfældig rækkefølge.
               </ConsentRow>
               <ConsentRow icon={<Timer className="size-4 shrink-0" />}>
-                After 20 minutes of watching in a day, you'll answer the daily mood check-in before returning to the
-                feed.
+                Efter at have set videoer i 20 minutter om dagen skal du besvare den daglige humørcheck, før du kan
+                vende tilbage til feedet.
               </ConsentRow>
               <ConsentRow icon={<ShieldCheck className="size-4 shrink-0" />}>
-                Your answers are saved under your username with the date and time you submitted them.
+                Dine svar gemmes under dit brugernavn sammen med dato og klokkeslæt for, hvornår du har indsendt dem,
+                samt hvor lang tid du bruger på appen
               </ConsentRow>
               <ConsentRow icon={<ShieldCheck className="size-4 shrink-0" />}>
-                Your responses are used only for this study's research.
+                Dine svar bruges udelukkende til denne undersøgelses forskningsformål.
               </ConsentRow>
             </ul>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            By creating an account you confirm that you understand the above and agree to take part.
+            Ved at oprette en konto bekræfter du, at du forstår ovenstående og accepterer at deltage.
           </p>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative z-10 px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-16">
-        <div className="mx-auto max-w-sm">
-          <h2 className="text-2xl font-black leading-tight tracking-tight">Ready to take part?</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Create your account with a username and start watching.
-          </p>
-          <Link
-            to="/auth"
-            className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98]"
-          >
-            Create account
-            <ChevronRight className="size-5" />
-          </Link>
           <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
-            Feed-forskningsprojekt · Research project
+            Feed-forskningsprojekt · Forskningsprojekt
           </p>
         </div>
       </section>
@@ -235,7 +210,7 @@ function Step({
         {icon}
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Step {num}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Trin {num}</p>
         <h3 className="font-semibold">{title}</h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{text}</p>
       </div>
