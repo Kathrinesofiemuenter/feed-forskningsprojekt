@@ -14,20 +14,32 @@ export function guessVideoType(file: File) {
   return "video/mp4";
 }
 
+export const LOGIN_EXPIRED = "Dit login er udløbet – log ind igen.";
+
+export function friendlyError(msg: string) {
+  return /row-level security|unauthorized|jwt|exp/i.test(msg) ? LOGIN_EXPIRED : msg;
+}
+
+/** Renews the session so a slow batch never uses a stale login. */
+export async function freshToken(): Promise<string> {
+  const { data } = await supabase.auth.refreshSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error(LOGIN_EXPIRED);
+  return token;
+}
+
 /** Upload with real progress reporting; retries once on network failure. */
 export async function uploadVideoWithProgress(
   path: string,
   file: File,
   onProgress: (pct: number) => void,
 ): Promise<void> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Du er ikke logget ind.");
   const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/videos/${encodeURIComponent(path)}`;
   const key = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
 
-  const attempt = () =>
-    new Promise<void>((resolve, reject) => {
+  const attempt = async () => {
+    const token = await freshToken();
+    return new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("POST", url);
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
@@ -43,11 +55,12 @@ export async function uploadVideoWithProgress(
         try {
           msg = JSON.parse(xhr.responseText).message ?? msg;
         } catch {}
-        reject(new Error(xhr.status === 413 ? "Filen er for stor (maks 200 MB)." : msg));
+        reject(new Error(xhr.status === 413 ? "Filen er for stor (maks 200 MB)." : friendlyError(msg)));
       };
       xhr.onerror = () => reject(new Error("network"));
       xhr.send(file);
     });
+  };
 
   try {
     await attempt();
