@@ -137,7 +137,14 @@ function AdminVideos() {
             their own random order.
           </p>
         </div>
-        <input ref={fileRef} type="file" accept="video/*" multiple hidden onChange={onFiles} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="video/*,.mov,.mp4,.m4v,.webm"
+          multiple
+          hidden
+          onChange={onFiles}
+        />
         <button
           type="button"
           disabled={uploading !== null}
@@ -145,9 +152,21 @@ function AdminVideos() {
           className="flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 disabled:opacity-60"
         >
           {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-          {uploading ? `Uploading ${uploading}…` : "Upload videos"}
+          {uploading ? `Uploading… ${progress}%` : "Upload videos"}
         </button>
       </div>
+      {uploading && (
+        <div className="mt-4 rounded-2xl border border-border bg-card p-3">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span className="truncate">{uploading}</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Keep this page open until the upload finishes.</p>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="mt-10 flex justify-center">
