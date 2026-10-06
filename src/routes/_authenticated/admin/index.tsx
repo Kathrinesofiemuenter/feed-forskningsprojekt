@@ -37,31 +37,43 @@ function AdminVideos() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function onFiles(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+    const all = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (files.length === 0) return;
-    const { data: auth } = await supabase.auth.getUser();
-    let i = 0;
-    for (const file of files) {
-      i++;
-      const label = files.length > 1 ? `${file.name} (${i}/${files.length})` : file.name;
+    const files = all.filter((file) => {
       if (!isVideoFile(file)) {
         toast.error(`${file.name} is not a video file.`);
-        continue;
+        return false;
       }
       if (file.size > 200 * 1024 * 1024) {
         toast.error(`${file.name} is larger than 200 MB.`);
-        continue;
+        return false;
       }
-      setUploading(label);
-      setProgress(0);
+      return true;
+    });
+    if (files.length === 0) return;
+    const { data: auth } = await supabase.auth.getUser();
+    const total = files.reduce((s, f) => s + f.size, 0);
+    const loaded = new Map<File, number>();
+    let done = 0;
+    const update = () => {
+      const sum = files.reduce((s, f) => s + (loaded.get(f) ?? 0), 0);
+      setProgress(Math.round((sum / total) * 100));
+      setUploading(`${done} of ${files.length} videos done`);
+    };
+    update();
+
+    async function uploadOne(file: File) {
       const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${crypto.randomUUID()}-${safe}`;
       try {
-        await uploadVideoWithProgress(path, file, setProgress);
+        await uploadVideoWithProgress(path, file, (pct) => {
+          loaded.set(file, (file.size * pct) / 100);
+          update();
+        });
       } catch (err) {
         toast.error(`Upload failed for ${file.name}: ${(err as Error).message}`);
-        continue;
+        loaded.set(file, file.size);
+        return;
       }
       const title = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
       const { error: dbErr } = await supabase.from("videos").insert({
@@ -69,13 +81,22 @@ function AdminVideos() {
         storage_path: path,
         uploaded_by: auth.user?.id ?? null,
       });
-      if (dbErr) {
-        toast.error(`Saved file but could not register ${file.name}.`);
-        continue;
-      }
-      toast.success(`Uploaded ${file.name}`);
-      qc.invalidateQueries({ queryKey: ["admin-videos"] });
+      if (dbErr) toast.error(`Saved file but could not register ${file.name}.`);
+      else qc.invalidateQueries({ queryKey: ["admin-videos"] });
     }
+
+    // Upload up to 3 files at the same time.
+    const queue = [...files];
+    const worker = async () => {
+      while (queue.length) {
+        const f = queue.shift()!;
+        await uploadOne(f);
+        done++;
+        update();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, files.length) }, worker));
+    toast.success(`Finished uploading ${files.length} video${files.length > 1 ? "s" : ""}`);
     setUploading(null);
     qc.invalidateQueries({ queryKey: ["admin-videos"] });
     qc.invalidateQueries({ queryKey: ["feed"] });
