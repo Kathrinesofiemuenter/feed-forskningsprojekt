@@ -28,11 +28,14 @@ export async function freshToken(): Promise<string> {
   return token;
 }
 
+export const UPLOAD_CANCELLED = "Upload stoppet.";
+
 /** Upload with real progress reporting; retries once on network failure. */
 export async function uploadVideoWithProgress(
   path: string,
   file: File,
   onProgress: (pct: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/videos/${encodeURIComponent(path)}`;
   const key = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string;
@@ -57,6 +60,8 @@ export async function uploadVideoWithProgress(
         reject(new Error(xhr.status === 413 ? "Filen er for stor (maks 200 MB)." : friendlyError(msg)));
       };
       xhr.onerror = () => reject(new Error("network"));
+      xhr.onabort = () => reject(new Error(UPLOAD_CANCELLED));
+      signal?.addEventListener("abort", () => xhr.abort(), { once: true });
       xhr.send(file);
     });
   };
@@ -64,7 +69,7 @@ export async function uploadVideoWithProgress(
   try {
     await attempt();
   } catch (e) {
-    if ((e as Error).message !== "network") throw e;
+    if ((e as Error).message !== "network" || signal?.aborted) throw e;
     onProgress(0);
     await attempt().catch((e2: Error) => {
       throw new Error(e2.message === "network" ? "Forbindelsen blev afbrudt." : e2.message);
