@@ -82,7 +82,7 @@ export async function uploadVideoWithProgress(
       reject(new Error(UPLOAD_CANCELLED));
     }, { once: true });
     upload.findPreviousUploads().then((prev) => {
-      if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
+      const p = prev[0]; if (p) upload.resumeFromPreviousUpload(p);
       upload.start();
     });
   });
