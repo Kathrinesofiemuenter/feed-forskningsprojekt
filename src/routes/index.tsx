@@ -141,7 +141,7 @@ function Index() {
               kalenderdag og nulstilles den næste dag.
             </Feature>
             <Feature icon={<ClipboardList className="size-5" />} title="Seks hurtige spørgsmål">
-              For hvert spørgsmål svarer du på, hvordan du har det lige nu, fra 1 (Slet ikke) til 5 (Meget): glad,
+              For hvert spørgsmål svarer du på, hvordan du har det lige nu, fra 1 (Slet ikke) til 5 (Ekstremt): glad,
               tilfreds, håbefuld, bekymret, ensom og irritabel.
             </Feature>
             <Feature icon={<Lock className="size-5" />} title="Påkrævet for at fortsætte.">
