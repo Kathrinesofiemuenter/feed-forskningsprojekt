@@ -190,7 +190,21 @@ function AdminVideos() {
   const activeCount = videos?.filter((v) => v.is_active).length ?? 0;
 
   return (
-    <section>
+    <section
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className="relative"
+    >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-3xl border-2 border-dashed border-primary bg-background/80">
+          <div className="flex flex-col items-center gap-2 text-primary">
+            <Upload className="size-8" />
+            <span className="text-sm font-semibold">Slip videoerne her for at uploade</span>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Feed videos</h2>
