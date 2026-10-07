@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,10 +36,43 @@ function AdminVideos() {
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
 
-  async function onFiles(e: ChangeEvent<HTMLInputElement>) {
+  function onDragEnter(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer.types.includes("Files")) {
+      dragDepth.current += 1;
+      setDragging(true);
+    }
+  }
+
+  function onDragLeave(e: DragEvent) {
+    e.preventDefault();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragging(false);
+  }
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragging(false);
+    if (uploading !== null) return;
+    void startUpload(Array.from(e.dataTransfer.files));
+  }
+
+  function onFiles(e: ChangeEvent<HTMLInputElement>) {
     const all = Array.from(e.target.files ?? []);
     e.target.value = "";
+    void startUpload(all);
+  }
+
+  async function startUpload(all: File[]) {
     const files = all.filter((file) => {
       if (!isVideoFile(file)) {
         toast.error(`${file.name} is not a video file.`);
