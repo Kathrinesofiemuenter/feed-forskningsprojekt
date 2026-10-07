@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,10 +36,43 @@ function AdminVideos() {
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
 
-  async function onFiles(e: ChangeEvent<HTMLInputElement>) {
+  function onDragEnter(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer.types.includes("Files")) {
+      dragDepth.current += 1;
+      setDragging(true);
+    }
+  }
+
+  function onDragLeave(e: DragEvent) {
+    e.preventDefault();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragging(false);
+  }
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragging(false);
+    if (uploading !== null) return;
+    void startUpload(Array.from(e.dataTransfer.files));
+  }
+
+  function onFiles(e: ChangeEvent<HTMLInputElement>) {
     const all = Array.from(e.target.files ?? []);
     e.target.value = "";
+    void startUpload(all);
+  }
+
+  async function startUpload(all: File[]) {
     const files = all.filter((file) => {
       if (!isVideoFile(file)) {
         toast.error(`${file.name} is not a video file.`);
@@ -157,7 +190,21 @@ function AdminVideos() {
   const activeCount = videos?.filter((v) => v.is_active).length ?? 0;
 
   return (
-    <section>
+    <section
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className="relative"
+    >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-3xl border-2 border-dashed border-primary bg-background/80">
+          <div className="flex flex-col items-center gap-2 text-primary">
+            <Upload className="size-8" />
+            <span className="text-sm font-semibold">Slip videoerne her for at uploade</span>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Feed videos</h2>
