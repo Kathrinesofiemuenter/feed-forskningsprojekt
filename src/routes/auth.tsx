@@ -139,7 +139,7 @@ function AuthPage() {
             className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {mode === "signin" ? "Sign in" : "Create account"}
+            {mode === "signin" ? "Log ind" : "Opret konto"}
           </button>
         </form>
       </div>
