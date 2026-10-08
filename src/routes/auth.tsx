@@ -53,11 +53,11 @@ function AuthPage() {
       });
       setBusy(false);
       if (error) {
-        toast.error(error.message.includes("registered") ? "That username is already taken." : error.message);
+        toast.error(error.message.includes("registered") ? "Det brugernavn er allerede taget." : error.message);
         return;
       }
       if (!data.session) {
-        toast.error("Account created but could not sign in. Try signing in.");
+        toast.error("Kontoen blev oprettet, men du kunne ikke logges ind. Prøv at logge ind.");
         setMode("signin");
         return;
       }
