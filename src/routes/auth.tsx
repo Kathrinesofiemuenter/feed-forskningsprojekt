@@ -83,11 +83,11 @@ function AuthPage() {
           Feed-forskningsprojekt
         </div>
 
-        <h1 className="text-3xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
+        <h1 className="text-3xl font-bold">{mode === "signin" ? "Velkommen tilbage" : "Opret din konto"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "signin"
-            ? "Enter the username and password you chose."
-            : "Pick a username and password. No email is required."}
+            ? "Indtast det brugernavn og den adgangskode, du har fået udleveret."
+            : "Vælg et brugernavn og en adgangskode. Der kræves ingen e-mailadresse."}
         </p>
 
         <div className="mt-6 grid grid-cols-2 rounded-xl bg-muted p-1 text-sm font-medium">
@@ -100,7 +100,7 @@ function AuthPage() {
                 mode === m ? "bg-card text-foreground shadow" : "text-muted-foreground"
               }`}
             >
-              {m === "signin" ? "Sign in" : "Sign up"}
+              {m === "signin" ? "Log ind" : "Tilmeld"}
             </button>
           ))}
         </div>
