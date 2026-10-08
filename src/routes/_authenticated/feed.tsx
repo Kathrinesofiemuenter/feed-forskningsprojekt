@@ -13,11 +13,10 @@ const FLUSH_INTERVAL = 15;
 
 export const Route = createFileRoute("/_authenticated/feed")({
   beforeLoad: async ({ context }) => {
-    const { data: isAdmin } = await supabase.rpc("has_role", {
-      _user_id: context.user.id,
-      _role: "admin",
-    });
-    const status = await fetchSurveyStatus(context.user.id);
+    const [{ data: isAdmin }, status] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" }),
+      fetchSurveyStatus(context.user.id),
+    ]);
     if (!isAdmin && status.due) throw redirect({ to: "/survey" });
     return { surveyStatus: status, isAdmin: Boolean(isAdmin) };
   },
@@ -34,7 +33,17 @@ async function fetchFeed(userId: string) {
   if (error) throw error;
   const ordered = buildPlaylist(data ?? [], userId);
   if (ordered.length === 0) return [];
-  const urls = await signFeedUrls({ data: { paths: ordered.map((v) => v.storage_path) } });
+  // Sign the first few right away so the feed starts fast; the rest follow in the background.
+  const FIRST = 3;
+  const head = ordered.slice(0, FIRST);
+  const tail = ordered.slice(FIRST);
+  const headUrlsP = signFeedUrls({ data: { paths: head.map((v) => v.storage_path) } });
+  const tailUrlsP = tail.length
+    ? signFeedUrls({ data: { paths: tail.map((v) => v.storage_path) } })
+    : Promise.resolve({} as Record<string, string>);
+  const headUrls = await headUrlsP;
+  const tailUrls = await tailUrlsP.catch(() => ({}) as Record<string, string>);
+  const urls = { ...headUrls, ...tailUrls };
   return ordered.map((v) => ({ ...v, url: urls[v.storage_path] ?? "" })).filter((v) => v.url);
 }
 
