@@ -67,7 +67,7 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      toast.error("Wrong username or password.");
+      toast.error("Forkert brugernavn eller adgangskode.");
       return;
     }
     navigate({ to: "/feed", replace: true });
