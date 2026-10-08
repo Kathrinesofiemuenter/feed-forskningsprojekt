@@ -63,14 +63,13 @@ export function seededShuffle<T>(items: T[], seed: string): T[] {
 }
 
 /**
- * Build a randomized playlist where each video appears at most twice (never
- * more) and never twice in a row. Deterministic per seed, so a participant
- * always gets the same sequence.
+ * Build a randomized playlist where each video appears exactly once.
+ * Deterministic per seed, so a participant always gets the same sequence.
  */
 export function buildPlaylist<T extends { id: string }>(
   videos: T[],
   seed: string,
-  maxRepeats = 2,
+  maxRepeats = 1,
 ): T[] {
   if (videos.length === 0) return [];
   // With a single video, a second showing would have to be back-to-back.
