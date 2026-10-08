@@ -117,7 +117,7 @@ function AuthPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="h-12 w-full rounded-xl border border-input bg-card px-4 text-base outline-none ring-ring transition focus:ring-2"
-              placeholder="e.g. p_042"
+              placeholder="fx p_042"
             />
           </label>
           <label className="block">
