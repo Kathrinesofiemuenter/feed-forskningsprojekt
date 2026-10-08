@@ -36,7 +36,7 @@ function AuthPage() {
     e.preventDefault();
     const uname = username.trim().toLowerCase();
     if (!USERNAME_RE.test(uname)) {
-      toast.error("Brugernavnet skal være 3–24 tegn: bogstaver, tal eller underscores.");
+      toast.error("Brugernavnet skal være 3–24 tegn: bogstaver, tal eller _.");
       return;
     }
     if (password.length < 6) {
