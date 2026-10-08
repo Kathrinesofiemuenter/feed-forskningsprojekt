@@ -36,11 +36,11 @@ function AuthPage() {
     e.preventDefault();
     const uname = username.trim().toLowerCase();
     if (!USERNAME_RE.test(uname)) {
-      toast.error("Username must be 3–24 characters: letters, numbers or underscores.");
+      toast.error("Brugernavnet skal være 3–24 tegn: bogstaver, tal eller underscores.");
       return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+      toast.error("Adgangskoden skal være mindst 6 tegn.");
       return;
     }
     setBusy(true);
