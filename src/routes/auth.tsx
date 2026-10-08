@@ -108,7 +108,7 @@ function AuthPage() {
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Username
+              Brugernavn
             </span>
             <input
               autoCapitalize="none"
