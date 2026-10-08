@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LogOut, Shield, Loader2, Clapperboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedVideo } from "@/components/FeedVideo";
@@ -48,6 +48,8 @@ function FeedPage() {
     queryFn: () => fetchFeed(user.id),
   });
   const [muted, setMuted] = useState(true);
+  const [current, setCurrent] = useState(0);
+  const onActive = useCallback((i: number) => setCurrent(i), []);
   const [seconds, setSeconds] = useState(surveyStatus.secondsToday);
   const pending = useRef(0);
   const flushing = useRef(false);
@@ -197,6 +199,8 @@ function FeedPage() {
               total={videos.length}
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
+              near={Math.abs(i - current) <= 2}
+              onActive={onActive}
             />
           ))}
         </main>

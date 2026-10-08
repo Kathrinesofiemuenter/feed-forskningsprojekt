@@ -8,9 +8,11 @@ type Props = {
   total: number;
   muted: boolean;
   onToggleMute: () => void;
+  near: boolean;
+  onActive: (index: number) => void;
 };
 
-export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Props) {
+export function FeedVideo({ src, title, index, total, muted, onToggleMute, near, onActive }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -22,6 +24,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
       ([entry]) => {
         const visible = (entry?.intersectionRatio ?? 0) > 0.6;
         setActive(visible);
+        if (visible) onActive(index);
         if (visible) {
           el.play().catch(() => {
             // Autoplay with sound can be blocked: retry silently, sound returns on tap.
@@ -37,7 +40,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [index, onActive]);
 
   useEffect(() => {
     const el = ref.current;
@@ -65,13 +68,13 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute }: Pro
           the bottom edge pushes that top strip out of view, cropping it for the viewer. */}
       <video
         ref={ref}
-        src={src}
+        src={near ? src : undefined}
         className="h-full w-full object-cover"
         style={{ transform: "scale(1.09)", transformOrigin: "50% 100%" }}
         loop
         playsInline
         muted={muted}
-        preload={active ? "auto" : "metadata"}
+        preload={near ? "auto" : "none"}
         onClick={togglePlay}
         onPlay={() => setPaused(false)}
       />
