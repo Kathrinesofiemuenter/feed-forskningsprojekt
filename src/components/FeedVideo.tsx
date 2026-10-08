@@ -9,10 +9,11 @@ type Props = {
   muted: boolean;
   onToggleMute: () => void;
   near: boolean;
+  eager?: boolean;
   onActive: (index: number) => void;
 };
 
-export function FeedVideo({ src, title, index, total, muted, onToggleMute, near, onActive }: Props) {
+export function FeedVideo({ src, title, index, total, muted, onToggleMute, near, eager, onActive }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -74,7 +75,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
         loop
         playsInline
         muted={muted}
-        preload={near ? "auto" : "none"}
+        preload={near ? (eager ? "auto" : "metadata") : "none"}
         onClick={togglePlay}
         onPlay={() => setPaused(false)}
       />
