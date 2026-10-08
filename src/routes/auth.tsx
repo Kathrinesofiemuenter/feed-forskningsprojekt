@@ -8,10 +8,10 @@ import { USERNAME_RE, usernameToEmail } from "@/lib/study";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in – Feed-forskningsprojekt" },
-      { name: "description", content: "Sign in or create your participant account with a username." },
-      { property: "og:title", content: "Sign in – Feed-forskningsprojekt" },
-      { property: "og:description", content: "Sign in or create your participant account with a username." },
+      { title: "Log ind – Feed-forskningsprojekt" },
+      { name: "description", content: "Log ind eller opret din deltagerkonto med et brugernavn." },
+      { property: "og:title", content: "Log ind – Feed-forskningsprojekt" },
+      { property: "og:description", content: "Log ind eller opret din deltagerkonto med et brugernavn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -36,11 +36,11 @@ function AuthPage() {
     e.preventDefault();
     const uname = username.trim().toLowerCase();
     if (!USERNAME_RE.test(uname)) {
-      toast.error("Username must be 3–24 characters: letters, numbers or underscores.");
+      toast.error("Brugernavnet skal være 3–24 tegn: bogstaver, tal eller _.");
       return;
     }
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+      toast.error("Adgangskoden skal være mindst 6 tegn.");
       return;
     }
     setBusy(true);
@@ -53,11 +53,11 @@ function AuthPage() {
       });
       setBusy(false);
       if (error) {
-        toast.error(error.message.includes("registered") ? "That username is already taken." : error.message);
+        toast.error(error.message.includes("registered") ? "Det brugernavn er allerede taget." : error.message);
         return;
       }
       if (!data.session) {
-        toast.error("Account created but could not sign in. Try signing in.");
+        toast.error("Kontoen blev oprettet, men du kunne ikke logges ind. Prøv at logge ind.");
         setMode("signin");
         return;
       }
@@ -67,7 +67,7 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      toast.error("Wrong username or password.");
+      toast.error("Forkert brugernavn eller adgangskode.");
       return;
     }
     navigate({ to: "/feed", replace: true });
@@ -83,11 +83,11 @@ function AuthPage() {
           Feed-forskningsprojekt
         </div>
 
-        <h1 className="text-3xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
+        <h1 className="text-3xl font-bold">{mode === "signin" ? "Velkommen tilbage" : "Opret din konto"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "signin"
-            ? "Enter the username and password you chose."
-            : "Pick a username and password. No email is required."}
+            ? "Indtast det brugernavn og den adgangskode, du har fået udleveret."
+            : "Vælg et brugernavn og en adgangskode. Der kræves ingen e-mailadresse."}
         </p>
 
         <div className="mt-6 grid grid-cols-2 rounded-xl bg-muted p-1 text-sm font-medium">
@@ -100,7 +100,7 @@ function AuthPage() {
                 mode === m ? "bg-card text-foreground shadow" : "text-muted-foreground"
               }`}
             >
-              {m === "signin" ? "Sign in" : "Sign up"}
+              {m === "signin" ? "Log ind" : "Tilmeld"}
             </button>
           ))}
         </div>
@@ -108,7 +108,7 @@ function AuthPage() {
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Username
+              Brugernavn
             </span>
             <input
               autoCapitalize="none"
@@ -117,12 +117,12 @@ function AuthPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="h-12 w-full rounded-xl border border-input bg-card px-4 text-base outline-none ring-ring transition focus:ring-2"
-              placeholder="e.g. p_042"
+              placeholder="fx p_042"
             />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Password
+              Adgangskode
             </span>
             <input
               type="password"
@@ -139,7 +139,7 @@ function AuthPage() {
             className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {mode === "signin" ? "Sign in" : "Create account"}
+            {mode === "signin" ? "Log ind" : "Opret konto"}
           </button>
         </form>
       </div>
