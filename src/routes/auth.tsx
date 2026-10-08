@@ -8,10 +8,10 @@ import { USERNAME_RE, usernameToEmail } from "@/lib/study";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in – Feed-forskningsprojekt" },
-      { name: "description", content: "Sign in or create your participant account with a username." },
-      { property: "og:title", content: "Sign in – Feed-forskningsprojekt" },
-      { property: "og:description", content: "Sign in or create your participant account with a username." },
+      { title: "Log ind – Feed-forskningsprojekt" },
+      { name: "description", content: "Log ind eller opret din deltagerkonto med et brugernavn." },
+      { property: "og:title", content: "Log ind – Feed-forskningsprojekt" },
+      { property: "og:description", content: "Log ind eller opret din deltagerkonto med et brugernavn." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
