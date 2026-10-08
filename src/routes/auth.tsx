@@ -122,7 +122,7 @@ function AuthPage() {
           </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Password
+              Adgangskode
             </span>
             <input
               type="password"
