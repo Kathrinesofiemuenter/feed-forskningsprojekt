@@ -25,14 +25,25 @@ export const Route = createFileRoute("/_authenticated/feed")({
 });
 
 async function fetchFeed(userId: string) {
-  const { data, error } = await supabase
-    .from("videos")
-    .select("id, title, storage_path")
-    .eq("is_active", true)
-    .order("sort_order")
-    .order("created_at");
+  const [{ data, error }, { data: views }] = await Promise.all([
+    supabase
+      .from("videos")
+      .select("id, title, storage_path")
+      .eq("is_active", true)
+      .order("sort_order")
+      .order("created_at"),
+    supabase.from("video_views").select("video_id").eq("user_id", userId).limit(10000),
+  ]);
   if (error) throw error;
-  const ordered = buildPlaylist(data ?? [], userId);
+  const seen = new Set((views ?? []).map((v) => v.video_id));
+  let pool = (data ?? []).filter((v) => !seen.has(v.id));
+  // Everything watched: start a fresh round with all videos.
+  if (pool.length === 0 && (data ?? []).length > 0) {
+    await supabase.from("video_views").delete().eq("user_id", userId);
+    pool = data ?? [];
+  }
+  // New random order every time the feed opens.
+  const ordered = buildPlaylist(pool, `${userId}:${Date.now()}:${Math.random()}`);
   if (ordered.length === 0) return [];
   // Sign the first batch right away so the feed starts fast; the rest follow
   // in parallel batches. Batches stay small because very large link requests
@@ -60,10 +71,23 @@ function FeedPage() {
   const { data: videos, isLoading } = useQuery({
     queryKey: ["feed", user.id],
     queryFn: () => fetchFeed(user.id),
+    staleTime: Infinity,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
   const onActive = useCallback((i: number) => setCurrent(i), []);
+  const recorded = useRef(new Set<string>());
+  useEffect(() => {
+    const v = videos?.[current];
+    if (!v || recorded.current.has(v.id)) return;
+    recorded.current.add(v.id);
+    void supabase
+      .from("video_views")
+      .upsert({ user_id: user.id, video_id: v.id }, { onConflict: "user_id,video_id", ignoreDuplicates: true });
+  }, [videos, current, user.id]);
   const [seconds, setSeconds] = useState(surveyStatus.secondsToday);
   const pending = useRef(0);
   const flushing = useRef(false);
