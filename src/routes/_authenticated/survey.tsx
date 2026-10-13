@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/survey")({
     });
     if (isAdmin) throw redirect({ to: "/feed" });
     const status = await fetchSurveyStatus(context.user.id);
-    if (!status.due) throw redirect({ to: "/feed" });
+    if (!status.due) throw redirect({ to: status.memoDue ? "/memo" : "/feed" });
     return { surveyStatus: status };
   },
   component: SurveyPage,
