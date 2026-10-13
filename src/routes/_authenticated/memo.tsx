@@ -59,7 +59,7 @@ function MemoPage() {
       rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        durationRef.current = Math.min(MEMO_MAX_SECONDS, Math.max(1, Math.round((Date.now() - startRef.current) / 1000)));
+        durationRef.current = Math.min(MEMO_MAX_SECONDS, Math.max(1, Math.floor((Date.now() - startRef.current) / 1000)));
         const b = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
         setBlob(b);
         setUrl(URL.createObjectURL(b));
