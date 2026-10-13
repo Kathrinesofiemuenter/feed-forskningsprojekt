@@ -141,6 +141,20 @@ function RootComponent() {
   // while the tab is in the background, so refresh the session whenever the
   // user returns to the tab.
   useEffect(() => {
+    // A page piece failed to load (app was updated or preview restarted): reload once.
+    const onPreloadError = (e: Event) => {
+      const key = "chunk-reload-at";
+      const last = Number(sessionStorage.getItem(key) || 0);
+      if (Date.now() - last < 10_000) return;
+      sessionStorage.setItem(key, String(Date.now()));
+      e.preventDefault();
+      window.location.reload();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+  }, []);
+
+  useEffect(() => {
     const refresh = () => {
       if (document.visibilityState === "visible") {
         supabase.auth.refreshSession().catch(() => {});
