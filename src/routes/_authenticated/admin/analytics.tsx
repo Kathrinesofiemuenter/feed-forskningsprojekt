@@ -203,10 +203,28 @@ async function fetchMemos() {
 function VoiceMemos() {
   const { data: memos, isLoading } = useQuery({ queryKey: ["voice-memos"], queryFn: fetchMemos });
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [exporting, setExporting] = useState<string | null>(null);
 
   async function load(m: MemoRow) {
     const { data } = await supabase.storage.from("voice-memos").createSignedUrl(m.storage_path, 3600);
     if (data?.signedUrl) setUrls((u) => ({ ...u, [m.id]: data.signedUrl }));
+  }
+
+  async function exportMp3(m: MemoRow) {
+    setExporting(m.id);
+    try {
+      let url = urls[m.id];
+      if (!url) {
+        const { data } = await supabase.storage.from("voice-memos").createSignedUrl(m.storage_path, 3600);
+        url = data?.signedUrl;
+        if (url) setUrls((u) => ({ ...u, [m.id]: url! }));
+      }
+      if (!url) throw new Error("no url");
+      const { exportVoiceMemoAsMp3 } = await import("@/lib/export-voice-memo");
+      await exportVoiceMemoAsMp3(url, m.username, m.memo_date);
+    } finally {
+      setExporting(null);
+    }
   }
 
   return (
