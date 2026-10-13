@@ -76,7 +76,7 @@ function SurveyPage() {
       </div>
       <h1 className="text-3xl font-bold leading-tight">Hvordan har du det lige nu?</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Du har set 20 minutter i dag. Svar på alle seks spørgsmål for at vende tilbage til feedet.
+        Du har set 20 minutter i dag. Svar på alle seks spørgsmål, og optag derefter en kort stemmebesked, før du vender tilbage til feedet.
       </p>
 
       <ol className="mt-8 space-y-8">
@@ -128,7 +128,7 @@ function SurveyPage() {
             className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {complete ? "Indsend og vend tilbage til feedet" : `Besvaret ${answered} af ${SURVEY_ITEMS.length}`}
+            {complete ? "Indsend og fortsæt til stemmebeskeden" : `Besvaret ${answered} af ${SURVEY_ITEMS.length}`}
           </button>
         </div>
       </div>
