@@ -26,7 +26,10 @@ export async function exportVoiceMemoAsMp3(
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
   });
 
-  await ffmpeg.writeFile("input.webm", await fetchFile(input));
+  await ffmpeg.writeFile(
+    "input.webm",
+    await fetchFile(new Blob([input.buffer as ArrayBuffer])),
+  );
   await ffmpeg.exec([
     "-i",
     "input.webm",
