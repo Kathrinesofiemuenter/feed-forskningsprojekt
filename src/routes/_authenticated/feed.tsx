@@ -33,17 +33,21 @@ async function fetchFeed(userId: string) {
   if (error) throw error;
   const ordered = buildPlaylist(data ?? [], userId);
   if (ordered.length === 0) return [];
-  // Sign the first few right away so the feed starts fast; the rest follow in the background.
-  const FIRST = 3;
-  const head = ordered.slice(0, FIRST);
-  const tail = ordered.slice(FIRST);
-  const headUrlsP = signFeedUrls({ data: { paths: head.map((v) => v.storage_path) } });
-  const tailUrlsP = tail.length
-    ? signFeedUrls({ data: { paths: tail.map((v) => v.storage_path) } })
-    : Promise.resolve({} as Record<string, string>);
-  const headUrls = await headUrlsP;
-  const tailUrls = await tailUrlsP.catch(() => ({}) as Record<string, string>);
-  const urls = { ...headUrls, ...tailUrls };
+  // Sign the first batch right away so the feed starts fast; the rest follow
+  // in parallel batches. Batches stay small because very large link requests
+  // are rejected by the server.
+  const BATCH = 150;
+  const batches: string[][] = [];
+  for (let i = 0; i < ordered.length; i += BATCH) {
+    batches.push(ordered.slice(i, i + BATCH).map((v) => v.storage_path));
+  }
+  const firstP = signFeedUrls({ data: { paths: batches[0]! } });
+  const restP = batches.slice(1).map((paths) =>
+    signFeedUrls({ data: { paths } }).catch(() => ({}) as Record<string, string>),
+  );
+  const firstUrls = await firstP;
+  const rest = await Promise.all(restP);
+  const urls = Object.assign({}, firstUrls, ...rest);
   return ordered.map((v) => ({ ...v, url: urls[v.storage_path] ?? "" })).filter((v) => v.url);
 }
 
