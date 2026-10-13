@@ -183,6 +183,62 @@ function Analytics() {
           </table>
         </div>
       )}
+      <VoiceMemos />
     </section>
+  );
+}
+
+type MemoRow = { id: string; username: string; memo_date: string; submitted_at: string; duration_seconds: number; storage_path: string };
+
+async function fetchMemos() {
+  const { data, error } = await supabase
+    .from("voice_memos")
+    .select("id, username, memo_date, submitted_at, duration_seconds, storage_path")
+    .order("submitted_at", { ascending: false })
+    .limit(2000);
+  if (error) throw error;
+  return (data ?? []) as MemoRow[];
+}
+
+function VoiceMemos() {
+  const { data: memos, isLoading } = useQuery({ queryKey: ["voice-memos"], queryFn: fetchMemos });
+  const [urls, setUrls] = useState<Record<string, string>>({});
+
+  async function load(m: MemoRow) {
+    const { data } = await supabase.storage.from("voice-memos").createSignedUrl(m.storage_path, 3600);
+    if (data?.signedUrl) setUrls((u) => ({ ...u, [m.id]: data.signedUrl }));
+  }
+
+  return (
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold">Voice memos</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{memos?.length ?? 0} memos.</p>
+      {isLoading ? (
+        <Loader2 className="mt-6 size-6 animate-spin text-muted-foreground" />
+      ) : !memos || memos.length === 0 ? (
+        <p className="mt-6 rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          No voice memos yet.
+        </p>
+      ) : (
+        <div className="mt-6 divide-y divide-border rounded-3xl border border-border bg-card">
+          {memos.map((m) => (
+            <div key={m.id} className="flex flex-wrap items-center gap-4 px-4 py-3 text-sm">
+              <span className="w-32 font-semibold">{m.username}</span>
+              <span className="w-44 text-muted-foreground">{new Date(m.submitted_at).toLocaleString()}</span>
+              <span className="w-12 tabular-nums text-muted-foreground">{m.duration_seconds}s</span>
+              {urls[m.id] ? (
+                <a href={urls[m.id]} download className="contents">
+                  <audio controls src={urls[m.id]} className="h-9 flex-1" />
+                </a>
+              ) : (
+                <button type="button" onClick={() => load(m)} className="rounded-lg bg-muted px-3 py-1.5 font-semibold">
+                  Play
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

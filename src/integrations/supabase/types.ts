@@ -149,6 +149,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_memos: {
+        Row: {
+          duration_seconds: number
+          id: string
+          memo_date: string
+          mime_type: string | null
+          storage_path: string
+          submitted_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          duration_seconds: number
+          id?: string
+          memo_date: string
+          mime_type?: string | null
+          storage_path: string
+          submitted_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          duration_seconds?: number
+          id?: string
+          memo_date?: string
+          mime_type?: string | null
+          storage_path?: string
+          submitted_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

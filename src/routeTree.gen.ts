@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
+import { Route as AuthenticatedMemoRouteImport } from './routes/_authenticated/memo'
 import { Route as AuthenticatedSurveyRouteImport } from './routes/_authenticated/survey'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
@@ -42,6 +43,11 @@ const AuthenticatedFeedRoute = AuthenticatedFeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMemoRoute = AuthenticatedMemoRouteImport.update({
+  id: '/memo',
+  path: '/memo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSurveyRoute = AuthenticatedSurveyRouteImport.update({
   id: '/survey',
   path: '/survey',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/feed': typeof AuthenticatedFeedRoute
+  '/memo': typeof AuthenticatedMemoRoute
   '/survey': typeof AuthenticatedSurveyRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/feed': typeof AuthenticatedFeedRoute
+  '/memo': typeof AuthenticatedMemoRoute
   '/survey': typeof AuthenticatedSurveyRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
+  '/_authenticated/memo': typeof AuthenticatedMemoRoute
   '/_authenticated/survey': typeof AuthenticatedSurveyRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -94,11 +103,19 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/feed'
+    | '/memo'
     | '/survey'
     | '/admin/analytics'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/feed' | '/survey' | '/admin/analytics' | '/admin'
+  to:
+    | '/'
+    | '/auth'
+    | '/feed'
+    | '/memo'
+    | '/survey'
+    | '/admin/analytics'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -106,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/feed'
+    | '/_authenticated/memo'
     | '/_authenticated/survey'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/'
@@ -154,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFeedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/memo': {
+      id: '/_authenticated/memo'
+      path: '/memo'
+      fullPath: '/memo'
+      preLoaderRoute: typeof AuthenticatedMemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/survey': {
       id: '/_authenticated/survey'
       path: '/survey'
@@ -197,12 +222,14 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
+  AuthenticatedMemoRoute: typeof AuthenticatedMemoRoute
   AuthenticatedSurveyRoute: typeof AuthenticatedSurveyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
+  AuthenticatedMemoRoute: AuthenticatedMemoRoute,
   AuthenticatedSurveyRoute: AuthenticatedSurveyRoute,
 }
 

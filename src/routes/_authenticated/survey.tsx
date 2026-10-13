@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/survey")({
     });
     if (isAdmin) throw redirect({ to: "/feed" });
     const status = await fetchSurveyStatus(context.user.id);
-    if (!status.due) throw redirect({ to: "/feed" });
+    if (!status.due) throw redirect({ to: status.memoDue ? "/memo" : "/feed" });
     return { surveyStatus: status };
   },
   component: SurveyPage,
@@ -57,14 +57,14 @@ function SurveyPage() {
     setBusy(false);
     if (error) {
       if (error.code === "23505") {
-        navigate({ to: "/feed", replace: true });
+        navigate({ to: "/memo", replace: true });
         return;
       }
       toast.error("Kunne ikke gemme dine svar. Prøv venligst igen.");
       return;
     }
     toast.success("Tak! Din besvarelse er gemt.");
-    navigate({ to: "/feed", replace: true });
+    navigate({ to: "/memo", replace: true });
   }
 
   const scale = Array.from({ length: LIKERT_MAX - LIKERT_MIN + 1 }, (_, i) => LIKERT_MIN + i);
