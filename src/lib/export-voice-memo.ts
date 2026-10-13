@@ -25,11 +25,11 @@ export async function exportVoiceMemoAsMp3(
   const mono = new Float32Array(len);
   for (let c = 0; c < audio.numberOfChannels; c++) {
     const d = audio.getChannelData(c);
-    for (let i = 0; i < len; i++) mono[i] += d[i] / audio.numberOfChannels;
+    for (let i = 0; i < len; i++) mono[i]! += d[i]! / audio.numberOfChannels;
   }
   const pcm = new Int16Array(len);
   for (let i = 0; i < len; i++) {
-    const s = Math.max(-1, Math.min(1, mono[i]));
+    const s = Math.max(-1, Math.min(1, mono[i]!));
     pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
 
