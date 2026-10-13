@@ -15,6 +15,13 @@
       "when": 1791896848650,
       "tag": "0001_voice_memos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791898049402,
+      "tag": "0002_tighten_voice_memo_insert",
+      "breakpoints": true
     }
   ]
 }
