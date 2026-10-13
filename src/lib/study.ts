@@ -1,6 +1,10 @@
 /** Cumulative feed seconds per calendar day that trigger the daily survey. */
 export const SURVEY_THRESHOLD_SECONDS = 20 * 60;
 
+/** Daily voice memo, required right after the survey. */
+export const MEMO_MAX_SECONDS = 90;
+export const MEMO_PROMPT = "Uddyb dine følelser og hvorfor du har det på den måde";
+
 export const SURVEY_ITEMS = [
   { key: "glad", label: "glad", question: "Vurder venligst, hvor glad du føler dig lige nu" },
   { key: "tilfreds", label: "tilfreds", question: "Vurder venligst, hvor tilfreds du føler dig lige nu" },
