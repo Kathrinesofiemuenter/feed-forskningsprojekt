@@ -208,8 +208,8 @@ function FeedPage() {
               total={videos.length}
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
-              near={i >= current - 1 && i <= current + 1}
-              eager={i === current || i === current + 1}
+              near={i >= current && i <= current + 1}
+              eager={i === current}
               onActive={onActive}
             />
           ))}
