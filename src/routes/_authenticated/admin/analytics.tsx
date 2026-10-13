@@ -203,10 +203,28 @@ async function fetchMemos() {
 function VoiceMemos() {
   const { data: memos, isLoading } = useQuery({ queryKey: ["voice-memos"], queryFn: fetchMemos });
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [exporting, setExporting] = useState<string | null>(null);
 
   async function load(m: MemoRow) {
     const { data } = await supabase.storage.from("voice-memos").createSignedUrl(m.storage_path, 3600);
     if (data?.signedUrl) setUrls((u) => ({ ...u, [m.id]: data.signedUrl }));
+  }
+
+  async function exportMp3(m: MemoRow) {
+    setExporting(m.id);
+    try {
+      let url = urls[m.id];
+      if (!url) {
+        const { data } = await supabase.storage.from("voice-memos").createSignedUrl(m.storage_path, 3600);
+        url = data?.signedUrl;
+        if (url) setUrls((u) => ({ ...u, [m.id]: url! }));
+      }
+      if (!url) throw new Error("no url");
+      const { exportVoiceMemoAsMp3 } = await import("@/lib/export-voice-memo");
+      await exportVoiceMemoAsMp3(url, m.username, m.memo_date);
+    } finally {
+      setExporting(null);
+    }
   }
 
   return (
@@ -227,14 +245,21 @@ function VoiceMemos() {
               <span className="w-44 text-muted-foreground">{new Date(m.submitted_at).toLocaleString()}</span>
               <span className="w-12 tabular-nums text-muted-foreground">{m.duration_seconds}s</span>
               {urls[m.id] ? (
-                <a href={urls[m.id]} download className="contents">
-                  <audio controls src={urls[m.id]} className="h-9 flex-1" />
-                </a>
+                <audio controls src={urls[m.id]} className="h-9 flex-1" />
               ) : (
                 <button type="button" onClick={() => load(m)} className="rounded-lg bg-muted px-3 py-1.5 font-semibold">
                   Play
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => exportMp3(m)}
+                disabled={exporting === m.id}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {exporting === m.id ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+                MP3
+              </button>
             </div>
           ))}
         </div>
