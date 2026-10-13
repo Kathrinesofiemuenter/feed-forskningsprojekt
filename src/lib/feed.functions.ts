@@ -10,22 +10,30 @@ export const signFeedUrls = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const unique = [...new Set(data.paths)];
     if (unique.length === 0) return {} as Record<string, string>;
-    const { data: rows, error } = await context.supabase
-      .from("videos")
-      .select("storage_path")
-      .eq("is_active", true)
-      .in("storage_path", unique);
-    if (error) throw new Error(error.message);
-    const allowed = (rows ?? []).map((r) => r.storage_path);
+    // Lookups and signing are chunked: with a few hundred videos a single
+    // request exceeds the server-function request size limit ("Bad Request").
+    const CHUNK = 100;
+    const allowed: string[] = [];
+    for (let i = 0; i < unique.length; i += CHUNK) {
+      const { data: rows, error } = await context.supabase
+        .from("videos")
+        .select("storage_path")
+        .eq("is_active", true)
+        .in("storage_path", unique.slice(i, i + CHUNK));
+      if (error) throw new Error(error.message);
+      allowed.push(...(rows ?? []).map((r) => r.storage_path));
+    }
     if (allowed.length === 0) return {} as Record<string, string>;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: signed, error: sErr } = await supabaseAdmin.storage
-      .from("videos")
-      .createSignedUrls(allowed, 60 * 60);
-    if (sErr) throw new Error(sErr.message);
     const out: Record<string, string> = {};
-    signed?.forEach((s) => {
-      if (s.path && s.signedUrl) out[s.path] = s.signedUrl;
-    });
+    for (let i = 0; i < allowed.length; i += CHUNK) {
+      const { data: signed, error: sErr } = await supabaseAdmin.storage
+        .from("videos")
+        .createSignedUrls(allowed.slice(i, i + CHUNK), 60 * 60);
+      if (sErr) throw new Error(sErr.message);
+      signed?.forEach((s) => {
+        if (s.path && s.signedUrl) out[s.path] = s.signedUrl;
+      });
+    }
     return out;
   });
