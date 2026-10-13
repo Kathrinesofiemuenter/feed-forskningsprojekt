@@ -1,6 +1,6 @@
-// Browser-only voice memo export: fetches the stored recording and converts it
-// to MP3 with ffmpeg.wasm. Must only be imported dynamically from client code —
-// it cannot run on the server.
+// Browser-only voice memo export: fetches the stored recording, decodes it with
+// the Web Audio API and encodes it to MP3 with lamejs (pure JS, no worker/CDN).
+// Must only be imported dynamically from client code.
 
 export async function exportVoiceMemoAsMp3(
   signedUrl: string,
@@ -11,44 +11,40 @@ export async function exportVoiceMemoAsMp3(
   onProgress?.("downloading");
   const res = await fetch(signedUrl);
   if (!res.ok) throw new Error(`Kunne ikke hente optagelsen (${res.status})`);
-  const input = new Uint8Array(await res.arrayBuffer());
+  const input = await res.arrayBuffer();
 
   onProgress?.("converting");
-  const [{ FFmpeg }, { fetchFile, toBlobURL }] = await Promise.all([
-    import("@ffmpeg/ffmpeg"),
-    import("@ffmpeg/util"),
-  ]);
+  const { Mp3Encoder } = await import("@breezystack/lamejs");
+  const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new Ctx();
+  const audio = await ctx.decodeAudioData(input);
+  void ctx.close();
 
-  const ffmpeg = new FFmpeg();
-  const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-  });
+  // Mix down to mono 16-bit PCM.
+  const len = audio.length;
+  const mono = new Float32Array(len);
+  for (let c = 0; c < audio.numberOfChannels; c++) {
+    const d = audio.getChannelData(c);
+    for (let i = 0; i < len; i++) mono[i]! += d[i]! / audio.numberOfChannels;
+  }
+  const pcm = new Int16Array(len);
+  for (let i = 0; i < len; i++) {
+    const s = Math.max(-1, Math.min(1, mono[i]!));
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
 
-  await ffmpeg.writeFile(
-    "input.webm",
-    await fetchFile(new Blob([input.buffer as ArrayBuffer])),
-  );
-  await ffmpeg.exec([
-    "-i",
-    "input.webm",
-    "-vn",
-    "-codec:a",
-    "libmp3lame",
-    "-q:a",
-    "4",
-    "output.mp3",
-  ]);
-  const data = await ffmpeg.readFile("output.mp3");
-  ffmpeg.terminate();
+  const encoder = new Mp3Encoder(1, audio.sampleRate, 128);
+  const parts: BlobPart[] = [];
+  const block = 1152;
+  for (let i = 0; i < len; i += block) {
+    const buf = encoder.encodeBuffer(pcm.subarray(i, i + block));
+    if (buf.length) parts.push(new Uint8Array(buf));
+  }
+  const end = encoder.flush();
+  if (end.length) parts.push(new Uint8Array(end));
 
-  const bytes =
-    typeof data === "string" ? new TextEncoder().encode(data) : data;
   const safeName = username.replace(/[^\w.-]+/g, "_") || "optagelse";
-  const blob = new Blob([bytes.buffer as ArrayBuffer], {
-    type: "audio/mpeg",
-  });
+  const blob = new Blob(parts, { type: "audio/mpeg" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -56,5 +52,5 @@ export async function exportVoiceMemoAsMp3(
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
