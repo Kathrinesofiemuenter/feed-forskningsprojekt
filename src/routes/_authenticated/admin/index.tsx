@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Upload, Trash2, Eye, EyeOff, Loader2, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isVideoFile, uploadVideoWithProgress, freshToken, friendlyError, UPLOAD_CANCELLED } from "@/lib/upload-video";
+import { deleteVideo } from "@/lib/video-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminVideos,
@@ -165,13 +166,14 @@ function AdminVideos() {
   });
 
   const remove = useMutation({
-    mutationFn: async (v: VideoRow) => {
-      const { error } = await supabase.from("videos").delete().eq("id", v.id);
-      if (error) throw error;
-      await supabase.storage.from("videos").remove([v.storage_path]);
-    },
-    onSuccess: () => {
-      toast.success("Video deleted");
+    mutationFn: async (v: VideoRow) =>
+      deleteVideo({ data: { id: v.id, storagePath: v.storage_path } }),
+    onSuccess: (res) => {
+      toast.success(
+        res.fileRemoved
+          ? "Video deleted"
+          : "Video deleted, but its file could not be removed.",
+      );
       qc.invalidateQueries({ queryKey: ["admin-videos"] });
       qc.invalidateQueries({ queryKey: ["feed"] });
     },
