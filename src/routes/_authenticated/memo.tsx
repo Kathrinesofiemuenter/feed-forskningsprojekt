@@ -5,7 +5,7 @@ import { Loader2, Mic, Square, RotateCcw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
-import { MEMO_MAX_SECONDS, MEMO_PROMPT, formatMinutes } from "@/lib/study";
+import { MEMO_MAX_SECONDS, MEMO_PROMPT, MEMO_SUBPROMPT, formatMinutes } from "@/lib/study";
 
 export const Route = createFileRoute("/_authenticated/memo")({
   head: () => ({ meta: [{ title: "Stemmebesked – Feed-forskningsprojekt" }] }),
@@ -118,7 +118,7 @@ function MemoPage() {
         <Lock className="size-3.5" /> Daglig stemmebesked
       </div>
       <h1 className="text-3xl font-bold leading-tight">{MEMO_PROMPT}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Optag 1 minut stemmebesked</p>
+      <p className="mt-2 text-sm text-muted-foreground">{MEMO_SUBPROMPT}</p>
 
       <div className="mt-12 flex flex-col items-center gap-6">
         <div className="font-mono text-5xl font-bold tabular-nums">
@@ -146,6 +146,7 @@ function MemoPage() {
             </button>
           </>
         )}
+        <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground/80">Optag 1 minut stemmebesked</p>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8">

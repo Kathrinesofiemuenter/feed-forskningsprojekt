@@ -3,7 +3,8 @@ export const SURVEY_THRESHOLD_SECONDS = 20 * 60;
 
 /** Daily voice memo, required right after the survey. */
 export const MEMO_MAX_SECONDS = 90;
-export const MEMO_PROMPT = "Uddyb dine følelser og hvorfor du har det på den måde";
+export const MEMO_PROMPT = "Hvad har påvirket dit humør i løbet af i dag?";
+export const MEMO_SUBPROMPT = "Tal om lige det, der falder dig ind";
 
 export const SURVEY_ITEMS = [
   { key: "glad", label: "glad", question: "Vurder venligst, hvor glad du føler dig lige nu" },
