@@ -47,13 +47,23 @@ function formatDayMin(seconds: number | undefined): string {
   return (Math.round((seconds / 60) * 10) / 10).toFixed(1);
 }
 
-/** "15.10.2026, 09.41.32" — participant's local time, dots as separators. */
+/** Times are shown in Danish time, whatever machine the CSV is made on. */
+const SUBMITTED_FMT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Copenhagen",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+/** "15.10.2026, 09.41.32" */
 function formatSubmitted(iso: string): string {
-  const d = new Date(iso);
-  const p = (n: number) => String(n).padStart(2, "0");
-  const date = `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
-  const time = `${p(d.getHours())}.${p(d.getMinutes())}.${p(d.getSeconds())}`;
-  return `${date}, ${time}`;
+  const p: Record<string, string> = {};
+  for (const part of SUBMITTED_FMT.formatToParts(new Date(iso))) p[part.type] = part.value;
+  return `${p["day"]}.${p["month"]}.${p["year"]}, ${p["hour"]}.${p["minute"]}.${p["second"]}`;
 }
 
 function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
