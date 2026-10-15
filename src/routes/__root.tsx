@@ -150,8 +150,23 @@ function RootComponent() {
       e.preventDefault();
       window.location.reload();
     };
+    const isChunkError = (msg: string) =>
+      /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(msg);
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const msg = String((e.reason as Error)?.message ?? e.reason ?? "");
+      if (isChunkError(msg)) onPreloadError(e);
+    };
+    const onError = (e: ErrorEvent) => {
+      if (isChunkError(String(e.message ?? ""))) onPreloadError(e);
+    };
     window.addEventListener("vite:preloadError", onPreloadError);
-    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+    window.addEventListener("unhandledrejection", onRejection);
+    window.addEventListener("error", onError);
+    return () => {
+      window.removeEventListener("vite:preloadError", onPreloadError);
+      window.removeEventListener("unhandledrejection", onRejection);
+      window.removeEventListener("error", onError);
+    };
   }, []);
 
   useEffect(() => {
