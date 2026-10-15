@@ -189,6 +189,95 @@ function Analytics() {
   );
 }
 
+type UsageRow = { user_id: string; usage_date: string; seconds: number; username: string };
+
+async function fetchUsage(): Promise<UsageRow[]> {
+  const [{ data: usage, error: usageError }, { data: profiles, error: profilesError }] = await Promise.all([
+    supabase.from("feed_usage").select("user_id, usage_date, seconds").order("usage_date", { ascending: false }).limit(10000),
+    supabase.from("profiles").select("id, username").limit(5000),
+  ]);
+  if (usageError) throw usageError;
+  if (profilesError) throw profilesError;
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.username]));
+  return (usage ?? []).map((u) => ({ ...u, username: nameById.get(u.user_id) ?? u.user_id.slice(0, 8) }));
+}
+
+function usageCsv(rows: UsageRow[]): string {
+  const esc = (v: unknown) => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, Math.round((r.seconds / 60) * 10) / 10].map(esc).join(","));
+  return ["username,date,seconds,minutes", ...lines].join("\n");
+}
+
+function WatchTime() {
+  const { data: rows, isLoading, error } = useQuery({ queryKey: ["feed-usage"], queryFn: fetchUsage });
+
+  function exportCsv() {
+    const blob = new Blob([usageCsv(rows ?? [])], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `watch_time_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="mt-12">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Watch time</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Time each participant has spent in the feed per day — including days where the survey was never reached.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={!rows || rows.length === 0}
+          className="flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 disabled:opacity-50"
+        >
+          <Download className="size-4" /> Export CSV
+        </button>
+      </div>
+      {isLoading ? (
+        <Loader2 className="mt-6 size-6 animate-spin text-muted-foreground" />
+      ) : error ? (
+        <p className="mt-6 text-sm text-destructive">Could not load watch time.</p>
+      ) : !rows || rows.length === 0 ? (
+        <p className="mt-6 rounded-3xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          No watch time recorded yet.
+        </p>
+      ) : (
+        <div className="mt-6 overflow-x-auto rounded-3xl border border-border bg-card">
+          <table className="w-full min-w-[480px] text-sm">
+            <thead className="bg-muted/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-semibold">username</th>
+                <th className="px-4 py-3 font-semibold">date</th>
+                <th className="px-4 py-3 text-right font-semibold">minutes</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {rows.map((r) => (
+                <tr key={`${r.user_id}-${r.usage_date}`} className="hover:bg-muted/30">
+                  <td className="px-4 py-3 font-semibold">{r.username}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.usage_date}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {(Math.round((r.seconds / 60) * 10) / 10).toFixed(1)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type MemoRow = { id: string; username: string; memo_date: string; submitted_at: string; duration_seconds: number; storage_path: string };
 
 async function fetchMemos() {
