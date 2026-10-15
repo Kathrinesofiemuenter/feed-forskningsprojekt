@@ -63,7 +63,7 @@ const SUBMITTED_FMT = new Intl.DateTimeFormat("en-GB", {
 function formatSubmitted(iso: string): string {
   const p: Record<string, string> = {};
   for (const part of SUBMITTED_FMT.formatToParts(new Date(iso))) p[part.type] = part.value;
-  return `${p.day}.${p.month}.${p.year}, ${p.hour}.${p.minute}.${p.second}`;
+  return `${p["day"]}.${p["month"]}.${p["year"]}, ${p["hour"]}.${p["minute"]}.${p["second"]}`;
 }
 
 function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
