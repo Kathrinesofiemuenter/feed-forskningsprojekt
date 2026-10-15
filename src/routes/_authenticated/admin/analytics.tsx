@@ -37,14 +37,13 @@ async function fetchResponses(): Promise<ResponseRow[]> {
   return data ?? [];
 }
 
-function round1Min(seconds: number | undefined): number | null {
-  if (seconds === undefined) return null;
-  return Math.round((seconds / 60) * 10) / 10;
-}
-
+/** Feed time as minutes:seconds, e.g. 1586 s -> "26:26". */
 function formatDayMin(seconds: number | undefined): string {
   if (seconds === undefined) return "–";
-  return (Math.round((seconds / 60) * 10) / 10).toFixed(1);
+  const total = Math.round(seconds);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /** Times are shown in Danish time, whatever machine the CSV is made on. */
@@ -82,7 +81,7 @@ function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
       r.username,
       formatSubmitted(r.submitted_at),
       ...SURVEY_ITEMS.map((i) => r[i.key]),
-      round1Min(daySeconds.get(`${r.username}|${r.survey_date}`)),
+      formatDayMin(daySeconds.get(`${r.username}|${r.survey_date}`)),
     ]
       .map(esc)
       .join(","),
