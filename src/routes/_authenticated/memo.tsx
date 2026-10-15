@@ -111,7 +111,6 @@ function MemoPage() {
     navigate({ to: "/feed", replace: true });
   }
 
-  const remaining = MEMO_MAX_SECONDS - elapsed;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-32 pt-[max(1.5rem,env(safe-area-inset-top))]">
@@ -119,12 +118,11 @@ function MemoPage() {
         <Lock className="size-3.5" /> Daglig stemmebesked
       </div>
       <h1 className="text-3xl font-bold leading-tight">{MEMO_PROMPT}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Maks. 1 minut og 30 sekunder.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Optag 1 minut stemmebesked</p>
 
       <div className="mt-12 flex flex-col items-center gap-6">
         <div className="font-mono text-5xl font-bold tabular-nums">
           {formatMinutes(state === "recording" ? elapsed : state === "done" ? durationRef.current : 0)}
-          <span className="text-xl text-muted-foreground"> / {formatMinutes(MEMO_MAX_SECONDS)}</span>
         </div>
 
         {state === "idle" && (
@@ -134,13 +132,10 @@ function MemoPage() {
           </button>
         )}
         {state === "recording" && (
-          <>
-            <button type="button" onClick={stop} aria-label="Stop optagelse"
-              className="flex size-28 animate-pulse items-center justify-center rounded-full bg-destructive text-destructive-foreground active:scale-95">
-              <Square className="size-10 fill-current" />
-            </button>
-            <p className="text-sm text-muted-foreground">{remaining} sekunder tilbage</p>
-          </>
+          <button type="button" onClick={stop} aria-label="Stop optagelse"
+            className="flex size-28 items-center justify-center rounded-full bg-destructive text-destructive-foreground active:scale-95">
+            <Square className="size-10 fill-current" />
+          </button>
         )}
         {state === "done" && url && (
           <>
