@@ -183,6 +183,7 @@ function Analytics() {
           </table>
         </div>
       )}
+      <WatchTime />
       <VoiceMemos />
     </section>
   );
