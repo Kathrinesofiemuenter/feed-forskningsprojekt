@@ -37,12 +37,23 @@ async function fetchResponses(): Promise<ResponseRow[]> {
   return data ?? [];
 }
 
-function toCsv(rows: ResponseRow[]): string {
+function round1Min(seconds: number | undefined): number | null {
+  if (seconds === undefined) return null;
+  return Math.round((seconds / 60) * 10) / 10;
+}
+
+function formatDayMin(seconds: number | undefined): string {
+  if (seconds === undefined) return "–";
+  return (Math.round((seconds / 60) * 10) / 10).toFixed(1);
+}
+
+function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
   const headers = [
     "username",
     "submitted_at",
     "survey_date",
     ...SURVEY_ITEMS.map((i) => i.key),
+    "feed_min_day",
     "feed_seconds_at_submit",
   ];
   const esc = (v: unknown) => {
@@ -55,6 +66,7 @@ function toCsv(rows: ResponseRow[]): string {
       r.submitted_at,
       r.survey_date,
       ...SURVEY_ITEMS.map((i) => r[i.key]),
+      round1Min(daySeconds.get(`${r.username}|${r.survey_date}`)),
       r.feed_seconds_at_submit,
     ]
       .map(esc)
@@ -65,6 +77,13 @@ function toCsv(rows: ResponseRow[]): string {
 
 function Analytics() {
   const { data: rows, isLoading, error } = useQuery({ queryKey: ["survey-responses"], queryFn: fetchResponses });
+  // Same query key as the Watch time table below, so the numbers are fetched once.
+  const { data: usage } = useQuery({ queryKey: ["feed-usage"], queryFn: fetchUsage });
+  const daySeconds = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const u of usage ?? []) m.set(`${u.username}|${u.usage_date}`, u.seconds);
+    return m;
+  }, [usage]);
   const [sortKey, setSortKey] = useState<SortKey>("submitted_at");
   const [dir, setDir] = useState<"asc" | "desc">("desc");
 
@@ -89,7 +108,7 @@ function Analytics() {
   }
 
   function exportCsv() {
-    const blob = new Blob([toCsv(sorted)], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([toCsv(sorted, daySeconds)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -159,7 +178,7 @@ function Analytics() {
                     {i.label}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right font-semibold">feed min</th>
+                <th className="px-4 py-3 text-right font-semibold">feed min (day)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -174,8 +193,11 @@ function Analytics() {
                       {r[i.key]}
                     </td>
                   ))}
-                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                    {r.feed_seconds_at_submit === null ? "–" : Math.round(r.feed_seconds_at_submit / 60)}
+                  <td
+                    className="px-4 py-3 text-right tabular-nums text-muted-foreground"
+                    title="Total feed time for this participant on this day"
+                  >
+                    {formatDayMin(daySeconds.get(`${r.username}|${r.survey_date}`))}
                   </td>
                 </tr>
               ))}
