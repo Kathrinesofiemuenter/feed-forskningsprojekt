@@ -47,14 +47,21 @@ function formatDayMin(seconds: number | undefined): string {
   return (Math.round((seconds / 60) * 10) / 10).toFixed(1);
 }
 
+/** "15.10.2026, 09.41.32" — participant's local time, dots as separators. */
+function formatSubmitted(iso: string): string {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, "0");
+  const date = `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+  const time = `${p(d.getHours())}.${p(d.getMinutes())}.${p(d.getSeconds())}`;
+  return `${date}, ${time}`;
+}
+
 function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
   const headers = [
     "username",
     "submitted_at",
-    "survey_date",
-    ...SURVEY_ITEMS.map((i) => i.key),
-    "feed_min_day",
-    "feed_seconds_at_submit",
+    ...SURVEY_ITEMS.map((i) => i.label),
+    "feed min (day)",
   ];
   const esc = (v: unknown) => {
     const s = v === null || v === undefined ? "" : String(v);
@@ -63,11 +70,9 @@ function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
   const lines = rows.map((r) =>
     [
       r.username,
-      r.submitted_at,
-      r.survey_date,
+      formatSubmitted(r.submitted_at),
       ...SURVEY_ITEMS.map((i) => r[i.key]),
       round1Min(daySeconds.get(`${r.username}|${r.survey_date}`)),
-      r.feed_seconds_at_submit,
     ]
       .map(esc)
       .join(","),
@@ -108,7 +113,8 @@ function Analytics() {
   }
 
   function exportCsv() {
-    const blob = new Blob([toCsv(sorted, daySeconds)], { type: "text/csv;charset=utf-8" });
+    // BOM so Excel reads æ/å/ø correctly.
+    const blob = new Blob(["\uFEFF" + toCsv(sorted, daySeconds)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
