@@ -29,6 +29,13 @@
       "when": 1791906451191,
       "tag": "0003_video_views",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792745001199,
+      "tag": "0004_delete_rebrib_account",
+      "breakpoints": true
     }
   ]
 }
