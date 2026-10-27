@@ -67,7 +67,14 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
-      toast.error("Forkert brugernavn eller adgangskode.");
+      const rateLimited =
+        error.status === 429 || /rate limit|too many|over_request_rate_limit/i.test(`${error.code ?? ""} ${error.message}`);
+      toast.error(
+        rateLimited
+          ? "Der er mange, der logger ind lige nu. Vent et par minutter, og prøv så igen én gang. Din adgangskode er ikke forkert."
+          : "Forkert brugernavn eller adgangskode.",
+        rateLimited ? { duration: 10000 } : undefined,
+      );
       return;
     }
     navigate({ to: "/feed", replace: true });
