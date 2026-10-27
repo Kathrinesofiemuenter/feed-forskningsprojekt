@@ -5,6 +5,21 @@ import { Play, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { USERNAME_RE, usernameToEmail } from "@/lib/study";
 
+const RETRY_WAITS_MS = [2000, 5000, 9000];
+
+type SignInError = NonNullable<Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"]>;
+
+function isRateLimited(error: SignInError) {
+  return (
+    error.status === 429 ||
+    /rate limit|too many|over_request_rate_limit/i.test(`${error.code ?? ""} ${error.message}`)
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
@@ -25,12 +40,24 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [waitNote, setWaitNote] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/feed", replace: true });
     });
   }, [navigate]);
+
+  async function signInWithRetry(email: string, password: string): Promise<SignInError | null> {
+    for (let attempt = 0; ; attempt++) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) return null;
+      if (!isRateLimited(error)) return error;
+      if (attempt >= RETRY_WAITS_MS.length) return error;
+      setWaitNote("Der er mange, der logger ind lige nu. Vi prøver igen om et øjeblik – du behøver ikke gøre noget.");
+      await sleep(RETRY_WAITS_MS[attempt] + Math.floor(Math.random() * 1500));
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -64,11 +91,11 @@ function AuthPage() {
       navigate({ to: "/feed", replace: true });
       return;
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const error = await signInWithRetry(email, password);
     setBusy(false);
+    setWaitNote(null);
     if (error) {
-      const rateLimited =
-        error.status === 429 || /rate limit|too many|over_request_rate_limit/i.test(`${error.code ?? ""} ${error.message}`);
+      const rateLimited = isRateLimited(error);
       toast.error(
         rateLimited
           ? "Der er mange, der logger ind lige nu. Vent et par minutter, og prøv så igen én gang."
@@ -148,6 +175,7 @@ function AuthPage() {
             {busy && <Loader2 className="size-4 animate-spin" />}
             {mode === "signin" ? "Log ind" : "Opret konto"}
           </button>
+          {waitNote && <p className="text-center text-xs text-muted-foreground">{waitNote}</p>}
         </form>
       </div>
     </main>

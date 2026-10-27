@@ -8,3 +8,4 @@
 - [x] Translate the daily check-in to Danish (glad, tilfreds, håbefuld, bekymret, ensom, irritabel) and change the scale to 0–5.
 - [x] Change the check-in scale to five buttons, 1–5, one choice per feeling.
 - [x] Apply the revised Danish front-page wording, make 5 read "I meget høj grad", and give the feed points icon bubbles like the check-in cards.
+- [ ] Auto-retry logins so a whole room on one Wi-Fi signing in at once still gets in.
