@@ -255,8 +255,8 @@ function usageCsv(rows: UsageRow[]): string {
     const s = String(v ?? "");
     return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, Math.round((r.seconds / 60) * 10) / 10].map(esc).join(";"));
-  return ["username;date;seconds;minutes", ...lines].join("\n");
+  const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, formatMinSec(r.seconds)].map(esc).join(";"));
+  return ["username;date;seconds;min.sec", ...lines].join("\n");
 }
 
 function WatchTime() {
@@ -305,7 +305,7 @@ function WatchTime() {
               <tr>
                 <th className="px-4 py-3 font-semibold">username</th>
                 <th className="px-4 py-3 font-semibold">date</th>
-                <th className="px-4 py-3 text-right font-semibold">minutes</th>
+                <th className="px-4 py-3 text-right font-semibold">min.sec</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -314,7 +314,7 @@ function WatchTime() {
                   <td className="px-4 py-3 font-semibold">{r.username}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.usage_date}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                    {(Math.round((r.seconds / 60) * 10) / 10).toFixed(1)}
+                    {formatMinSec(r.seconds)}
                   </td>
                 </tr>
               ))}
