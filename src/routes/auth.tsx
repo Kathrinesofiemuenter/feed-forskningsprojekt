@@ -55,7 +55,7 @@ function AuthPage() {
       if (!isRateLimited(error)) return error;
       if (attempt >= RETRY_WAITS_MS.length) return error;
       setWaitNote("Der er mange, der logger ind lige nu. Vi prøver igen om et øjeblik – du behøver ikke gøre noget.");
-      await sleep(RETRY_WAITS_MS[attempt] + Math.floor(Math.random() * 1500));
+      await sleep((RETRY_WAITS_MS[attempt] ?? 9000) + Math.floor(Math.random() * 1500));
     }
   }
 
