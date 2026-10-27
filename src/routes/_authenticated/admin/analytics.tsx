@@ -46,6 +46,15 @@ function formatDayMin(seconds: number | undefined): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** Feed time as minutes.seconds, e.g. 1050 s -> "17.30" = 17 min 30 sek. */
+function formatMinSec(seconds: number | undefined): string {
+  if (seconds === undefined) return "–";
+  const total = Math.round(seconds);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}.${String(s).padStart(2, "0")}`;
+}
+
 /** Times are shown in Danish time, whatever machine the CSV is made on. */
 const SUBMITTED_FMT = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Europe/Copenhagen",
