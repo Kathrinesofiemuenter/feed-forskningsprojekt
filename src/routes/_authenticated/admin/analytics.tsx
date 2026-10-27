@@ -72,9 +72,10 @@ function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
     ...SURVEY_ITEMS.map((i) => i.label),
     "feed min (day)",
   ];
+  // Semicolon separator: Danish Excel splits columns at ";" not ",".
   const esc = (v: unknown) => {
     const s = v === null || v === undefined ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = rows.map((r) =>
     [
@@ -84,9 +85,9 @@ function toCsv(rows: ResponseRow[], daySeconds: Map<string, number>): string {
       formatDayMin(daySeconds.get(`${r.username}|${r.survey_date}`)),
     ]
       .map(esc)
-      .join(","),
+      .join(";"),
   );
-  return [headers.join(","), ...lines].join("\n");
+  return [headers.join(";"), ...lines].join("\n");
 }
 
 function Analytics() {
@@ -240,12 +241,13 @@ async function fetchUsage(): Promise<UsageRow[]> {
 }
 
 function usageCsv(rows: UsageRow[]): string {
+  // Semicolon separator: Danish Excel splits columns at ";" not ",".
   const esc = (v: unknown) => {
     const s = String(v ?? "");
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, Math.round((r.seconds / 60) * 10) / 10].map(esc).join(","));
-  return ["username,date,seconds,minutes", ...lines].join("\n");
+  const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, Math.round((r.seconds / 60) * 10) / 10].map(esc).join(";"));
+  return ["username;date;seconds;minutes", ...lines].join("\n");
 }
 
 function WatchTime() {
