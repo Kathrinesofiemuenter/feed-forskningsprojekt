@@ -46,13 +46,13 @@ function formatDayMin(seconds: number | undefined): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Feed time as minutes.seconds, e.g. 1050 s -> "17.30" = 17 min 30 sek. */
+/** Feed time as minutes:seconds, e.g. 1050 s -> "17:30" = 17 min 30 sek. */
 function formatMinSec(seconds: number | undefined): string {
   if (seconds === undefined) return "–";
   const total = Math.round(seconds);
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${m}.${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /** Times are shown in Danish time, whatever machine the CSV is made on. */
@@ -256,7 +256,7 @@ function usageCsv(rows: UsageRow[]): string {
     return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = rows.map((r) => [r.username, r.usage_date, r.seconds, formatMinSec(r.seconds)].map(esc).join(";"));
-  return ["username;date;seconds;min.sec", ...lines].join("\n");
+  return ["username;date;seconds;min:sec", ...lines].join("\n");
 }
 
 function WatchTime() {
@@ -305,7 +305,7 @@ function WatchTime() {
               <tr>
                 <th className="px-4 py-3 font-semibold">username</th>
                 <th className="px-4 py-3 font-semibold">date</th>
-                <th className="px-4 py-3 text-right font-semibold">min.sec</th>
+                <th className="px-4 py-3 text-right font-semibold">min:sek</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
