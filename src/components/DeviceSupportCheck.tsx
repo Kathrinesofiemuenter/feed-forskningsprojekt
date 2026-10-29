@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 function isSupported(): boolean {
   if (typeof window === "undefined") return true;
   const w = window as unknown as Record<string, unknown>;
-  const hasRecorder = typeof w.MediaRecorder !== "undefined";
+  const hasRecorder = typeof w["MediaRecorder"] !== "undefined";
   const hasMic = !!navigator.mediaDevices?.getUserMedia;
   const hasStorage = (() => {
     try {
