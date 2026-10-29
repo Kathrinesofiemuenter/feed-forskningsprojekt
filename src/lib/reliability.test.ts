@@ -1,4 +1,3 @@
-/// <reference types="bun" />
 import { describe, expect, test } from "bun:test";
 import { isTemporaryFailure, LOGIN_RETRY_WAITS_MS, FEED_WINDOW, retryDelay } from "./reliability";
 
