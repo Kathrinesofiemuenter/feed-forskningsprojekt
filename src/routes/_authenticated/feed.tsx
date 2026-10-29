@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,6 +14,7 @@ import { signFeedUrls } from "@/lib/feed.functions";
 const FLUSH_INTERVAL = 15;
 
 export const Route = createFileRoute("/_authenticated/feed")({
+  head: () => pageHead("Video-feed", "Deltagernes private forskningsfeed med korte videoer."),
   beforeLoad: async ({ context }) => {
     const [{ data: isAdmin }, status] = await Promise.all([
       supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" }),

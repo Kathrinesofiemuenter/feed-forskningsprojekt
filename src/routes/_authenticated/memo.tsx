@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -9,7 +10,7 @@ import { MEMO_MAX_SECONDS, MEMO_PROMPT, MEMO_SUBPROMPT, formatMinutes } from "@/
 import { enqueue, flushOutbox } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/memo")({
-  head: () => ({ meta: [{ title: "Stemmebesked – Feed-forskningsprojekt" }] }),
+  head: () => pageHead("Stemmebesked", "Deltagernes daglige stemmebesked om dagens humør."),
   beforeLoad: async ({ context }) => {
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" });
     if (isAdmin) throw redirect({ to: "/feed" });

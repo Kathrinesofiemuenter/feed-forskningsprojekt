@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { LIKERT_LABELS, LIKERT_MAX, LIKERT_MIN, SURVEY_ITEMS, type SurveyKey } f
 import { enqueue, flushOutbox } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/survey")({
+  head: () => pageHead("Daglig check-in", "Daglig besvarelse af seks spørgsmål om humør."),
   beforeLoad: async ({ context }) => {
     const { data: isAdmin } = await supabase.rpc("has_role", {
       _user_id: context.user.id,
