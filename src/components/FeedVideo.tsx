@@ -26,11 +26,26 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
 
   useEffect(() => {
     setFailed(false);
-    if (!src || !active || !near) return;
+    setWaiting(false);
+  }, [src]);
+
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    void el.play().catch(() => { setNeedsTap(true); });
-  }, [src, active, near]);
+    if (!src || !active || !near) {
+      el.pause();
+      return;
+    }
+    let cancelled = false;
+    el.muted = muted;
+    void el.play().catch((error: unknown) => {
+      if (cancelled || (error as { name?: string })?.name !== "NotAllowedError") return;
+      el.muted = true;
+      setNeedsTap(true);
+      void el.play().catch(() => { if (!cancelled) setPaused(true); });
+    });
+    return () => { cancelled = true; };
+  }, [src, active, near, muted]);
 
   useEffect(() => {
     const el = ref.current;
@@ -40,30 +55,12 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
         const visible = (entry?.intersectionRatio ?? 0) > 0.6;
         setActive(visible);
         if (visible) onActive(index);
-        if (visible && el.getAttribute("src")) {
-          el.play().catch(() => {
-            // Autoplay with sound can be blocked: retry silently, sound returns on tap.
-            el.muted = true;
-            setNeedsTap(true);
-            el.play().catch(() => setPaused(true));
-          });
-        } else if (!visible) {
-          el.pause();
-          el.currentTime = 0;
-        }
       },
       { threshold: [0, 0.6, 1] },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, [index, onActive]);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.muted = muted;
-    if (!muted && active && el.paused) el.play().catch(() => undefined);
-  }, [muted, active]);
 
   function unlockSound() {
     const el = ref.current;
@@ -93,7 +90,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
           the bottom edge pushes that top strip out of view, cropping it for the viewer. */}
       <video
         ref={ref}
-        src={near ? src : undefined}
+        src={near && src ? src : undefined}
         className="h-full w-full object-cover"
         style={{ transform: "scale(1.09)", transformOrigin: "50% 100%" }}
         loop

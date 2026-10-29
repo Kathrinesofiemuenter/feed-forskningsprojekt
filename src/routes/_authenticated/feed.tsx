@@ -10,6 +10,7 @@ import { fetchSurveyStatus } from "@/lib/survey-status";
 import { SURVEY_THRESHOLD_SECONDS, buildPlaylist, localDate } from "@/lib/study";
 import { FEED_WINDOW, retryDelay } from "@/lib/reliability";
 import { signFeedUrls } from "@/lib/feed.functions";
+import { FeedUrlCache } from "@/lib/feed-url-cache";
 
 const FLUSH_INTERVAL = 15;
 
@@ -67,11 +68,12 @@ function FeedPage() {
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
   const feedRef = useRef<HTMLElement>(null);
+  const [linkCache] = useState(() => new FeedUrlCache());
   const nearby = videos?.slice(current, current + FEED_WINDOW) ?? [];
   const paths = nearby.map(v => v.storage_path);
   const { data: urls = {} } = useQuery({
     queryKey: ["feed-links", user.id, ...paths],
-    queryFn: () => signFeedUrls({ data: { paths } }),
+    queryFn: () => linkCache.resolve(paths, missing => signFeedUrls({ data: { paths: missing } })),
     enabled: paths.length > 0,
     staleTime: 45 * 60 * 1000,
     placeholderData: previous => previous,

@@ -10,5 +10,6 @@
 <!-- LOVABLE:END -->
 
 - Keep feed ordering separate from URL delivery; sign only a small moving window and mount media only near the active item to bound per-participant storage requests and memory.
+- Reuse unexpired signed media links across overlapping feed windows and centralize automatic playback; changing a buffered source or seeking during visibility changes causes startup restarts.
 - Persist survey and memo submissions to the device outbox before network delivery; commit IndexedDB transactions before navigating, scope sync to the signed-in user, and back off temporary failures without discarding payloads.
 - Use the shared reliability policy for login and delivery retries so concurrent participants spread requests over time rather than retrying in synchronized bursts.
