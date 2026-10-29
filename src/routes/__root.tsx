@@ -147,7 +147,8 @@ function RootComponent() {
       const last = Number(sessionStorage.getItem(key) || 0);
       if (Date.now() - last < 10_000) return;
       sessionStorage.setItem(key, String(Date.now()));
-      e.preventDefault();
+      // Do NOT preventDefault: for vite:preloadError that makes the import resolve
+      // to undefined, which crashes the router ("reading 'component'").
       window.location.reload();
     };
     const isChunkError = (msg: string) =>
