@@ -72,3 +72,38 @@ Forty-nine contexts did not complete: four did not navigate to feed within the l
 ### Cleanup
 
 All 300 temporary accounts across the setup and two measured runs were removed. The submission run's 51 audio objects were deleted through storage API. Verified zero remaining test rows in profiles, roles, survey responses, voice memos, daily usage and video views, and zero files in their audio folders. Final account count returned to the original 78; real participant records were not targeted. Temporary diagnostic browser activity used these same temporary accounts and was included in cleanup.
+
+## Additional published-app retest — 29 October 2026, approximately 19:13–19:25 UTC
+
+Created 101 isolated temporary accounts: one preliminary full-flow check and 100 measured participants. Used ten independent Chromium processes, each with ten isolated contexts, microphone permission and a known non-silent WAV input. The preliminary login → survey → approximately one-minute recording → delivery flow passed. No app behavior changes or publication occurred.
+
+### Measured run
+
+| Measurement | Result |
+|---|---|
+| Password login reached feed | 100/100; median 82.06 s, p95 221.31 s, maximum 223.23 s; timing includes initial page loading |
+| First signed source | 99/100; median 3.56 s after feed entry, p95 13.45 s, maximum 14.19 s among successful contexts; one timed out after 90 s |
+| Full signed MP4 transfer | 99/99 attempted transfers HTTP 200; 372,769,233 bytes total |
+| Initial survey submission and read-back | 99/100; all 99 exact six answers, usernames and timestamps verified |
+| Concurrent one-minute recording UI | 99/100 started and submitted; measured elapsed median 62.04 s, maximum 63.63 s |
+| Initial saved memo/file read-back | 98/100; all 98 had correct username, timestamp, duration at least 59 s and non-empty audio |
+| UI delivered indicator | 99 contexts saw it, but one had no saved memo/object at read-back; indicator alone was not accepted as proof |
+| Login throttling | 332 HTTP 429 responses |
+| Browser-observed storage errors | Five |
+| Published server-function HTTP errors / runtime exceptions | Zero / zero |
+
+All 100 measured accounts were intentionally advanced to 1,195 daily seconds after the login/source stage, to exercise the real survey threshold without a 20-minute wait. This run has synchronized stages, not sustained continuous playback or an all-hours mixed-stage soak.
+
+### Follow-up and limits
+
+The missing-source account and the submitted-but-not-received memo account were revisited through ordinary password login and UI flows. The former completed its survey; both recorded and submitted new approximately one-minute memos. This follow-up waited for actual saved-row read-back rather than only the delivery indicator. Final verification: **100/100 surveys, 100/100 memos, 100/100 non-empty audio objects and 100/100 daily usage rows at or above 1,200 seconds**, with exact answer values 4,3,2,4,3,3 and matching usernames/timestamps.
+
+The initially absent memo may reflect closing its context before asynchronous upload completed, a stale success indicator, or another delivery issue; this run did not isolate the cause. Follow-up re-recording is not evidence that its original queued blob automatically recovered.
+
+Chromium explicitly returned an empty `canPlayType` for H.264 MP4 and `probably` for VP8 WebM. No playable MP4 frames were demonstrated. This establishes a limitation of this testing browser, not compatibility of every feed file on participant phones. Splitting recording capture across processes improved recording completion from the previous run, but synthetic capture is not proof of real-phone microphone reliability.
+
+**Conclusion:** Better recording-stage completion, and all 100 datasets eventually collected and verified after two follow-ups; still not a clean 100/100 uninterrupted end-to-end pass. Shared-IP login delays exceeded three minutes for some accounts, one video-source failure occurred, initial memo receipt was incomplete, and actual concurrent playback remains unverified. Existing eleven reliability/outbox tests passed using Bun; Vitest cannot run these Bun-specific test files.
+
+### Cleanup
+
+Removed all 101 temporary accounts, their study rows and their audio objects. Verified zero temporary accounts and zero remaining rows in profiles, roles, survey responses, voice memos, feed usage and video views. The original 78 accounts remain and every original account ID was preserved. No real participant data was targeted.
