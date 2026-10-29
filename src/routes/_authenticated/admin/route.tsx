@@ -34,7 +34,7 @@ function AdminLayout() {
             <Table2 className="size-4" /> Survey responses
           </Link>
           <Link to="/admin/users" className={tab} activeProps={{ className: `${tab} ${active}` }}>
-            <KeyRound className="size-4" /> Adgangskoder
+            <KeyRound className="size-4" /> Brugere
           </Link>
         </nav>
       </header>

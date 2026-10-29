@@ -2,6 +2,40 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export type AdminUserRow = {
+  username: string;
+  createdAt: string;
+  role: string;
+};
+
+/** Admin-only: list every account (username, creation date, role). */
+export const listUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, username, created_at").order("username"),
+      supabaseAdmin.from("user_roles").select("user_id, role"),
+    ]);
+    if (pErr) throw new Error(pErr.message);
+    if (rErr) throw new Error(rErr.message);
+
+    const roleByUser = new Map<string, string>((roles ?? []).map((r) => [r.user_id, r.role]));
+    return {
+      users: (profiles ?? []).map((p) => ({
+        username: p.username,
+        createdAt: p.created_at,
+        role: roleByUser.get(p.id) ?? "user",
+      })) satisfies AdminUserRow[],
+    };
+  });
+
 /** Admin-only: set a new password for a participant, looked up by username. */
 export const resetUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
