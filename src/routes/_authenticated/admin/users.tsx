@@ -19,8 +19,8 @@ function UsersAdmin() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const uname = username.trim().toLowerCase();
-    if (!/^[a-z0-9_]{3,24}$/.test(uname)) return toast.error("Ugyldigt brugernavn.");
-    if (password.length < 6) return toast.error("Adgangskoden skal være mindst 6 tegn.");
+    if (!/^[a-z0-9_]{3,24}$/.test(uname)) { toast.error("Ugyldigt brugernavn."); return; }
+    if (password.length < 6) { toast.error("Adgangskoden skal være mindst 6 tegn."); return; }
     setBusy(true);
     try {
       const res = await reset({ data: { username: uname, password } });
