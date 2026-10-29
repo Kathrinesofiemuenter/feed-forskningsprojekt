@@ -39,3 +39,36 @@ Deleted and verified removal of all 100 temporary accounts, their profiles/roles
 - Eleven automated tests passed. A real participant browser flow completed six survey answers, recorded non-silent audio, received a simulated upload 429, retried automatically, and showed delivered status without runtime errors. The temporary verification account and audio were removed.
 - A sampled failing original is 46.7 MB, 18.46 seconds, H.264/AAC in MOV at 1180×2556. Its original file was not replaced; phone playback and broader transcoding remain unverified.
 - These changes are preview-only. No published-worker 100-user retest or compute upgrade has been performed, and the original capacity findings are not superseded by the smaller verification run.
+
+## Post-conversion published-app retest — 29 October 2026, 18:17–18:34 UTC
+
+The earlier preview-only notes above are historical. This retest targeted https://feed-forskningsprojekt.lovable.app after publication and conversion. Inventory confirmed 901 active MP4 paths. Two measured runs used 100 isolated Chromium contexts each, with real participant password login through the published UI. Temporary accounts were provisioned through the admin API; all participant actions used the app UI. A setup-only run aborted because of an ambiguous test selector and was cleaned before measurement.
+
+### Playback run
+
+Signed sources arrived, but the testing browser reported media error 4 and did not produce playable frames. This prevented subsequent survey/memo stages in that run. A separately downloaded sample returned HTTP 200, video/mp4, 3,932,444 bytes, H.264/AAC, 588×1280, 33.4 seconds; ffmpeg successfully decoded two seconds. That does not prove playback on phones, nor establish that the failure is exclusively the testing browser. Concurrent continuous playback remains unverified.
+
+### Delivery and submission run
+
+The second run measured signed-source arrival and full-file transfers independently of playback, then continued through the UI. After a short feed interval, only test accounts' usage totals were advanced to 1,195 seconds to reach the real daily threshold quickly. Four groups entered later stages 15 seconds apart, providing some overlapping activity, not an all-hours soak. Microphones used Chromium's synthetic input and successful recordings lasted approximately one minute.
+
+| Measurement | Observed result |
+|---|---|
+| UI reached feed after password login | 96/100; median 38.46 s, p95 180.57 s, maximum 182.83 s |
+| First signed source arrived | 95/100; median 3.32 s after feed entry, p95 10.67 s, maximum 44.03 s |
+| Full MP4 transfers | 149/157 HTTP 200; median attempt latency 0.51 s, maximum 26.03 s; repeated samples are not unique participants or sustained playback |
+| Survey UI submission and exact read-back | 95/100; all saved rows matched six values 4,3,2,4,3,3, username and populated timestamp |
+| Daily usage read-back | 95 rows at or above 1,200 s, after intentional test-only threshold advancement |
+| One-minute microphone recordings submitted, delivered indicator, file read-back | 51/100; all 51 files non-empty and saved duration at least 59 s |
+| Published server-function requests | 587; zero HTTP errors recorded |
+| Browser runtime exceptions | Zero recorded |
+| Login throttling | 316 HTTP 429 responses across retries |
+| Storage HTTP errors seen by browser | 11; direct transfer results above were counted separately |
+
+Forty-nine contexts did not complete: four did not navigate to feed within the login timeout, one did not obtain its first source, and 44 reached the memo page but did not expose the stop-recording control within 30 seconds. A separate single-context check using one of those same accounts started recording successfully. The test did not isolate whether the 100-context microphone failures were app timing, browser resource/input constraints, or another cause. These must not be reported as 100 successful recordings or evidence of lost uploaded data.
+
+**Conclusion:** This run does not certify reliable 100-participant end-to-end operation. Shared-IP login delays remain close to three minutes for some participants; transfers still encounter temporary failures; playback and concurrent microphone behavior need further diagnosis and real-device checks. Every successfully submitted survey and memo in this run was verified, but collection for all 100 was not demonstrated. No application changes, compute upgrade, or publication occurred during this retest. The existing 11 reliability/outbox tests passed.
+
+### Cleanup
+
+All 300 temporary accounts across the setup and two measured runs were removed. The submission run's 51 audio objects were deleted through storage API. Verified zero remaining test rows in profiles, roles, survey responses, voice memos, daily usage and video views, and zero files in their audio folders. Final account count returned to the original 78; real participant records were not targeted. Temporary diagnostic browser activity used these same temporary accounts and was included in cleanup.
