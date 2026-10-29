@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Repeat the published 100-user test with an independently checked recording setup, verify stored submissions and remove all temporary accounts/data; distinguish test-machine limits from app failures.
+
 - [x] Convert existing feed videos to playback-compatible, smaller MP4 files, preserving content, identity and private access.
 - [x] Repeat the post-conversion 100-user test against the published app, including overlapping stages, data read-back and temporary-data cleanup (29 October 2026). Findings in load-test-report.md: 96 feed logins, 95 verified surveys, 51 verified one-minute recordings; playback and concurrent microphone failures prevent readiness certification. Cleanup verified; original 78 accounts preserved.
 
