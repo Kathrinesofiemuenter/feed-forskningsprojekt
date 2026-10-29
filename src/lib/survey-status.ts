@@ -24,11 +24,11 @@ export async function fetchSurveyStatus(userId: string): Promise<SurveyStatus> {
     hasPending(userId, "memo", date),
   ]);
   // A failed read is not proof that the participant has no daily check-in due.
-  if (usageError && !surveyPending) throw usageError;
-  if (responseError && !surveyPending) throw responseError;
-  if (memoError && !memoPending) throw memoError;
+  if (usageError && !surveyPending && !memoPending) throw usageError;
+  if (responseError && !surveyPending && !memoPending) throw responseError;
+  if (memoError && !memoPending && !surveyPending) throw memoError;
   const secondsToday = usage?.seconds ?? 0;
-  const submittedToday = Boolean(response) || surveyPending;
+  const submittedToday = Boolean(response) || surveyPending || memoPending;
   return {
     date,
     secondsToday,
