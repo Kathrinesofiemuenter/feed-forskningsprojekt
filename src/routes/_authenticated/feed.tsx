@@ -64,6 +64,7 @@ function FeedPage() {
   });
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
+  const feedRef = useRef<HTMLElement>(null);
   const nearby = videos?.slice(current, current + FEED_WINDOW) ?? [];
   const paths = nearby.map(v => v.storage_path);
   const { data: urls = {} } = useQuery({
@@ -71,6 +72,7 @@ function FeedPage() {
     queryFn: () => signFeedUrls({ data: { paths } }),
     enabled: paths.length > 0,
     staleTime: 45 * 60 * 1000,
+    placeholderData: previous => previous,
     retry: 5,
     retryDelay: attempt => retryDelay(attempt),
   });
@@ -223,7 +225,7 @@ function FeedPage() {
           )}
         </div>
       ) : (
-        <main className="snap-feed h-full w-full overflow-y-scroll">
+        <main ref={feedRef} className="snap-feed h-full w-full overflow-y-scroll">
           {videos.map((v, i) => (
             <div key={v.id} className="h-dvh w-full snap-start snap-always">
               {Math.abs(i - current) <= 2 && <FeedVideo
@@ -236,6 +238,11 @@ function FeedPage() {
                 near={i >= current && i <= current + 1}
                 eager={i === current}
                 onActive={onActive}
+                onSkip={() => {
+                  const next = (i + 1) % videos.length;
+                  feedRef.current?.children.item(next)?.scrollIntoView({ behavior: "instant", block: "start" });
+                  setCurrent(next);
+                }}
               />}
             </div>
           ))}
