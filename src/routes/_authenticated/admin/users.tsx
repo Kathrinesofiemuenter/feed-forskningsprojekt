@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -6,7 +7,7 @@ import { Loader2, KeyRound, Search, Users } from "lucide-react";
 import { resetUserPassword, listUsers } from "@/lib/user-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
-  head: () => ({ meta: [{ title: "Brugere – Feed-forskningsprojekt" }] }),
+  head: () => pageHead("Brugere", "Administration af deltagerkonti og adgangskoder."),
   component: UsersAdmin,
 });
 

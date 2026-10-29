@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
@@ -8,6 +9,7 @@ import { isVideoFile, uploadVideoWithProgress, freshToken, friendlyError, UPLOAD
 import { deleteVideo } from "@/lib/video-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => pageHead("Videoer", "Administration af forskningsprojektets videoer."),
   component: AdminVideos,
 });
 

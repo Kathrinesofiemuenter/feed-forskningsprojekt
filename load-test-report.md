@@ -30,3 +30,12 @@
 ## Cleanup
 
 Deleted and verified removal of all 100 temporary accounts, their profiles/roles, feed usage, survey answers, memo records, watched-video rows, and 101 test audio objects. Real participant accounts and study data were not included in cleanup.
+
+## Follow-up reliability changes
+
+- Feed now signs four nearby videos, verified in Chromium, rather than waiting on all 901. Only three video elements mounted initially, four after advancing one item; the full randomized ordered list remains intact.
+- Login retries now use seven spaced waits totaling 156 seconds before jitter. Wrong passwords still do not retry.
+- Survey and audio payloads commit locally before navigation. Temporary failures including HTTP 429 and 5xx remain queued with backoff. Status distinguishes queued and delivered payloads. Original submission timestamp is retained.
+- Eleven automated tests passed. A real participant browser flow completed six survey answers, recorded non-silent audio, received a simulated upload 429, retried automatically, and showed delivered status without runtime errors. The temporary verification account and audio were removed.
+- A sampled failing original is 46.7 MB, 18.46 seconds, H.264/AAC in MOV at 1180×2556. Its original file was not replaced; phone playback and broader transcoding remain unverified.
+- These changes are preview-only. No published-worker 100-user retest or compute upgrade has been performed, and the original capacity findings are not superseded by the smaller verification run.

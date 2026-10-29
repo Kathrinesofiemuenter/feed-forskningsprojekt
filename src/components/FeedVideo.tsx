@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX, Play } from "lucide-react";
+import { Volume2, VolumeX, Play, Loader2, SkipForward } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   src: string;
@@ -11,14 +12,25 @@ type Props = {
   near: boolean;
   eager?: boolean;
   onActive: (index: number) => void;
+  onSkip: () => void;
 };
 
-export function FeedVideo({ src, title, index, total, muted, onToggleMute, near, eager, onActive }: Props) {
+export function FeedVideo({ src, title, index, total, muted, onToggleMute, near, eager, onActive, onSkip }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(false);
   const [paused, setPaused] = useState(false);
   // True when the browser blocked sound or autoplay and only a tap can unlock it.
   const [needsTap, setNeedsTap] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+    if (!src || !active || !near) return;
+    const el = ref.current;
+    if (!el) return;
+    void el.play().catch(() => { setNeedsTap(true); });
+  }, [src, active, near]);
 
   useEffect(() => {
     const el = ref.current;
@@ -28,14 +40,14 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
         const visible = (entry?.intersectionRatio ?? 0) > 0.6;
         setActive(visible);
         if (visible) onActive(index);
-        if (visible) {
+        if (visible && el.getAttribute("src")) {
           el.play().catch(() => {
             // Autoplay with sound can be blocked: retry silently, sound returns on tap.
             el.muted = true;
             setNeedsTap(true);
             el.play().catch(() => setPaused(true));
           });
-        } else {
+        } else if (!visible) {
           el.pause();
           el.currentTime = 0;
         }
@@ -90,36 +102,42 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
         preload={near ? (eager ? "auto" : "metadata") : "none"}
         onClick={togglePlay}
         onPlay={() => setPaused(false)}
+        onWaiting={() => setWaiting(true)}
+        onPlaying={() => { setWaiting(false); setFailed(false); }}
+        onCanPlay={() => setWaiting(false)}
+        onError={() => { if (src && near) setFailed(true); }}
       />
-      {paused && (
-        <button
+      {active && (!src || waiting) && !failed && <Loader2 aria-label="Indlæser video" className="absolute inset-0 m-auto size-6 animate-spin text-muted-foreground" />}
+      {failed && active && <Button variant="secondary" size="icon" onClick={onSkip} aria-label="Næste video" title="Næste video" className="absolute inset-0 m-auto size-14"><SkipForward /></Button>}
+      {paused && !failed && src && (
+        <Button variant="ghost"
           type="button"
           onClick={togglePlay}
           aria-label="Play"
           className="absolute inset-0 m-auto flex size-24 items-center justify-center rounded-full bg-foreground/15 backdrop-blur-sm"
         >
           <Play className="size-10 fill-current text-foreground" />
-        </button>
+        </Button>
       )}
       {needsTap && active && (
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={unlockSound}
           className="absolute left-1/2 top-[max(1.5rem,env(safe-area-inset-top))] z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground/15 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur-md"
         >
           <VolumeX className="size-4" /> Tryk for lyd
-        </button>
+        </Button>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
 
-      <button
+      <Button variant="ghost"
         type="button"
         onClick={onToggleMute}
         aria-label={muted ? "Unmute" : "Mute"}
         className="absolute bottom-28 right-4 flex size-14 items-center justify-center rounded-full bg-foreground/10 text-foreground backdrop-blur-md transition-transform active:scale-90"
       >
         {muted ? <VolumeX className="size-6" /> : <Volume2 className="size-6" />}
-      </button>
+      </Button>
     </section>
   );
 }

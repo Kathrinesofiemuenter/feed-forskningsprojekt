@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,11 +8,13 @@ import { FeedVideo } from "@/components/FeedVideo";
 import { useCurrentUser, useSignOut } from "@/hooks/useCurrentUser";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { SURVEY_THRESHOLD_SECONDS, buildPlaylist, localDate } from "@/lib/study";
+import { FEED_WINDOW, retryDelay } from "@/lib/reliability";
 import { signFeedUrls } from "@/lib/feed.functions";
 
 const FLUSH_INTERVAL = 15;
 
 export const Route = createFileRoute("/_authenticated/feed")({
+  head: () => pageHead("Video-feed", "Deltagernes private forskningsfeed med korte videoer."),
   beforeLoad: async ({ context }) => {
     const [{ data: isAdmin }, status] = await Promise.all([
       supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" }),
@@ -45,22 +48,7 @@ async function fetchFeed(userId: string) {
   // New random order every time the feed opens.
   const ordered = buildPlaylist(pool, `${userId}:${Date.now()}:${Math.random()}`);
   if (ordered.length === 0) return [];
-  // Sign the first batch right away so the feed starts fast; the rest follow
-  // in parallel batches. Batches stay small because very large link requests
-  // are rejected by the server.
-  const BATCH = 150;
-  const batches: string[][] = [];
-  for (let i = 0; i < ordered.length; i += BATCH) {
-    batches.push(ordered.slice(i, i + BATCH).map((v) => v.storage_path));
-  }
-  const firstP = signFeedUrls({ data: { paths: batches[0]! } });
-  const restP = batches.slice(1).map((paths) =>
-    signFeedUrls({ data: { paths } }).catch(() => ({}) as Record<string, string>),
-  );
-  const firstUrls = await firstP;
-  const rest = await Promise.all(restP);
-  const urls = Object.assign({}, firstUrls, ...rest);
-  return ordered.map((v) => ({ ...v, url: urls[v.storage_path] ?? "" })).filter((v) => v.url);
+  return ordered;
 }
 
 function FeedPage() {
@@ -78,6 +66,18 @@ function FeedPage() {
   });
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
+  const feedRef = useRef<HTMLElement>(null);
+  const nearby = videos?.slice(current, current + FEED_WINDOW) ?? [];
+  const paths = nearby.map(v => v.storage_path);
+  const { data: urls = {} } = useQuery({
+    queryKey: ["feed-links", user.id, ...paths],
+    queryFn: () => signFeedUrls({ data: { paths } }),
+    enabled: paths.length > 0,
+    staleTime: 45 * 60 * 1000,
+    placeholderData: previous => previous,
+    retry: 5,
+    retryDelay: attempt => retryDelay(attempt),
+  });
   const onActive = useCallback((i: number) => setCurrent(i), []);
   const recorded = useRef(new Set<string>());
   useEffect(() => {
@@ -205,7 +205,7 @@ function FeedPage() {
 
       {muted && videos && videos.length > 0 && (
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/15 px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] backdrop-blur-md">
-          Tap for sound
+          Tryk for lyd
         </div>
       )}
 
@@ -227,20 +227,29 @@ function FeedPage() {
           )}
         </div>
       ) : (
-        <main className="snap-feed h-full w-full overflow-y-scroll">
+        <main ref={feedRef} onScroll={event => {
+          const el = event.currentTarget;
+          setCurrent(Math.min(videos.length - 1, Math.max(0, Math.round(el.scrollTop / el.clientHeight))));
+        }} className="snap-feed h-full w-full overflow-y-scroll">
           {videos.map((v, i) => (
-            <FeedVideo
-              key={`${v.id}-${i}`}
-              src={v.url}
-              title={v.title}
-              index={i}
-              total={videos.length}
-              muted={muted}
-              onToggleMute={() => setMuted((m) => !m)}
-              near={i >= current && i <= current + 1}
-              eager={i === current}
-              onActive={onActive}
-            />
+            <div key={v.id} className="h-dvh w-full snap-start snap-always">
+              {Math.abs(i - current) <= 2 && <FeedVideo
+                src={urls[v.storage_path] ?? ""}
+                title={v.title}
+                index={i}
+                total={videos.length}
+                muted={muted}
+                onToggleMute={() => setMuted(m => !m)}
+                near={i >= current && i <= current + 1}
+                eager={i === current}
+                onActive={onActive}
+                onSkip={() => {
+                  const next = (i + 1) % videos.length;
+                  feedRef.current?.children.item(next)?.scrollIntoView({ behavior: "instant", block: "start" });
+                  setCurrent(next);
+                }}
+              />}
+            </div>
           ))}
         </main>
       )}

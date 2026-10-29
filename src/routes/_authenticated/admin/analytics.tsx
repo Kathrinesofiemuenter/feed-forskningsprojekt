@@ -1,3 +1,4 @@
+import { pageHead } from "@/lib/page-head";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SURVEY_ITEMS } from "@/lib/study";
 
 export const Route = createFileRoute("/_authenticated/admin/analytics")({
+  head: () => pageHead("Besvarelser og data", "Administration af check-in, daglig feedtid og stemmebeskeder."),
   component: Analytics,
 });
 

@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep feed ordering separate from URL delivery; sign only a small moving window and mount media only near the active item to bound per-participant storage requests and memory.
+- Persist survey and memo submissions to the device outbox before network delivery; commit IndexedDB transactions before navigating, scope sync to the signed-in user, and back off temporary failures without discarding payloads.
+- Use the shared reliability policy for login and delivery retries so concurrent participants spread requests over time rather than retrying in synchronized bursts.

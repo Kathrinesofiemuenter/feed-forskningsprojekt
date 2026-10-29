@@ -13,7 +13,7 @@ export type SurveyStatus = {
 
 export async function fetchSurveyStatus(userId: string): Promise<SurveyStatus> {
   const date = localDate();
-  const [{ data: usage }, { data: response }, { data: memo }] = await Promise.all([
+  const [{ data: usage, error: usageError }, { data: response, error: responseError }, { data: memo, error: memoError }] = await Promise.all([
     supabase.from("feed_usage").select("seconds").eq("user_id", userId).eq("usage_date", date).maybeSingle(),
     supabase.from("survey_responses").select("id").eq("user_id", userId).eq("survey_date", date).maybeSingle(),
     supabase.from("voice_memos").select("id").eq("user_id", userId).eq("memo_date", date).maybeSingle(),
@@ -23,8 +23,12 @@ export async function fetchSurveyStatus(userId: string): Promise<SurveyStatus> {
     hasPending(userId, "survey", date),
     hasPending(userId, "memo", date),
   ]);
+  // A failed read is not proof that the participant has no daily check-in due.
+  if (usageError && !surveyPending && !memoPending) throw usageError;
+  if (responseError && !surveyPending && !memoPending) throw responseError;
+  if (memoError && !memoPending && !surveyPending) throw memoError;
   const secondsToday = usage?.seconds ?? 0;
-  const submittedToday = Boolean(response) || surveyPending;
+  const submittedToday = Boolean(response) || surveyPending || memoPending;
   return {
     date,
     secondsToday,

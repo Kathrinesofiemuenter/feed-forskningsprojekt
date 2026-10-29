@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { DeviceSupportCheck } from "@/components/DeviceSupportCheck";
+import { DeliveryStatus } from "@/components/DeliveryStatus";
 import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
@@ -197,6 +198,7 @@ function RootComponent() {
       <Outlet />
       <Toaster position="top-center" />
       <DeviceSupportCheck />
+      <DeliveryStatus />
     </QueryClientProvider>
   );
 }
