@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Convert existing feed videos to playback-compatible, smaller MP4 files, preserving content, identity and private access.
+- [ ] Repeat the 100-user test against the published app, including overlapping stages, data read-back and temporary-data cleanup.
+
 - [x] Change the app color scheme to TikTok-inspired black, white, red, and cyan.
 - [x] Remove social-action controls from uploaded videos while retaining playback and sound controls.
 - [x] Cap each video at two showings per participant, never back-to-back.
