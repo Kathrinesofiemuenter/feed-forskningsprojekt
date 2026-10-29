@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
 import { MEMO_MAX_SECONDS, MEMO_PROMPT, MEMO_SUBPROMPT, formatMinutes } from "@/lib/study";
-import { enqueue, isNetworkError } from "@/lib/outbox";
+import { enqueue, flushOutbox } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/memo")({
   head: () => ({ meta: [{ title: "Stemmebesked – Feed-forskningsprojekt" }] }),
@@ -143,33 +143,17 @@ function MemoPage() {
       storage_path: path,
       duration_seconds: durationRef.current,
       mime_type: type,
+      submitted_at: new Date().toISOString(),
     };
-    const saveLocally = async () => {
-      await enqueue({ kind: "memo", id: crypto.randomUUID(), userId: user.id, date: surveyStatus.date, path, blob, row });
+    try {
+      await enqueue({ kind: "memo", id: `${user.id}:memo:${surveyStatus.date}`, userId: user.id, date: surveyStatus.date, path, blob, row });
+    } catch {
       setBusy(false);
-      toast.success("Ingen forbindelse – din stemmebesked er gemt på telefonen og sendes automatisk.");
-      navigate({ to: "/feed", replace: true });
-    };
-    let upErr: { message?: string } | null = null;
-    try {
-      upErr = (await supabase.storage.from("voice-memos").upload(path, blob, { contentType: type })).error;
-    } catch (e) {
-      upErr = { message: String(e) };
+      toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen.");
+      return;
     }
-    if (upErr) {
-      if (isNetworkError(upErr)) return saveLocally();
-      setBusy(false); toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen."); return;
-    }
-    let error: { code?: string; message?: string } | null = null;
-    try {
-      ({ error } = await supabase.from("voice_memos").insert(row));
-    } catch (e) {
-      error = { message: String(e) };
-    }
-    if (error && error.code !== "23505" && isNetworkError(error)) return saveLocally();
+    void flushOutbox().catch(() => undefined);
     setBusy(false);
-    if (error && error.code !== "23505") { toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen."); return; }
-    toast.success("Tak! Din stemmebesked er gemt.");
     navigate({ to: "/feed", replace: true });
   }
 

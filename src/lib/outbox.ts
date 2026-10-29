@@ -1,29 +1,11 @@
-// Offline outbox: survey answers and voice memos that could not be sent
-// (weak/no connection) are kept in IndexedDB on the device and sent
-// automatically when the connection returns.
 import { supabase } from "@/integrations/supabase/client";
+import { isTemporaryFailure, retryDelay } from "./reliability";
 
-export type SurveyItem = {
-  kind: "survey";
-  id: string;
-  userId: string;
-  date: string;
-  row: Record<string, unknown>;
-};
-export type MemoItem = {
-  kind: "memo";
-  id: string;
-  userId: string;
-  date: string;
-  path: string;
-  blob: Blob;
-  row: Record<string, unknown>;
-};
+type Delivery = { attempts?: number; retryAt?: number; blocked?: boolean };
+export type SurveyItem = Delivery & { kind: "survey"; id: string; userId: string; date: string; row: Record<string, unknown> };
+export type MemoItem = Delivery & { kind: "memo"; id: string; userId: string; date: string; path: string; blob: Blob; row: Record<string, unknown> };
 export type OutboxItem = SurveyItem | MemoItem;
-
-const DB = "feed-outbox";
-const STORE = "items";
-
+const DB = "feed-outbox", STORE = "items";
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB, 1);
@@ -32,107 +14,81 @@ function open(): Promise<IDBDatabase> {
     req.onerror = () => reject(req.error);
   });
 }
-
 async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await open();
   return new Promise((resolve, reject) => {
-    const r = fn(db.transaction(STORE, mode).objectStore(STORE));
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
+    const transaction = db.transaction(STORE, mode);
+    const request = fn(transaction.objectStore(STORE));
+    transaction.oncomplete = () => { db.close(); resolve(request.result); };
+    transaction.onerror = transaction.onabort = () => { db.close(); reject(transaction.error ?? request.error); };
   });
 }
-
-const available = () => typeof indexedDB !== "undefined";
-
+const changed = () => window.dispatchEvent(new Event("outbox-change"));
 export async function listOutbox(): Promise<OutboxItem[]> {
-  if (!available()) return [];
-  try {
-    return await tx("readonly", (s) => s.getAll() as IDBRequest<OutboxItem[]>);
-  } catch {
-    return [];
-  }
+  if (typeof indexedDB === "undefined") return [];
+  return tx("readonly", s => s.getAll() as IDBRequest<OutboxItem[]>);
 }
-
 export async function enqueue(item: OutboxItem) {
-  await tx("readwrite", (s) => s.put(item));
-  window.dispatchEvent(new Event("outbox-change"));
+  await tx("readwrite", s => s.put(item));
+  changed();
 }
-
-async function remove(id: string) {
-  await tx("readwrite", (s) => s.delete(id));
-}
-
 export async function hasPending(userId: string, kind: OutboxItem["kind"], date: string) {
-  const items = await listOutbox();
-  return items.some((i) => i.userId === userId && i.kind === kind && i.date === date);
+  return (await listOutbox()).some(i => i.userId === userId && i.kind === kind && i.date === date);
 }
-
-/** True when an error looks like a lost/weak connection rather than a real rejection. */
-export function isNetworkError(error: unknown): boolean {
-  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
-  const msg = String((error as { message?: string })?.message ?? error ?? "");
-  return /failed to fetch|network|load failed|timeout|timed out|aborted|offline/i.test(msg);
+export function isNetworkError(error: unknown) {
+  return (typeof navigator !== "undefined" && !navigator.onLine) || isTemporaryFailure(error);
 }
-
 let flushing = false;
-
-/** Try to send everything waiting in the outbox. Safe to call often. */
 export async function flushOutbox() {
-  if (flushing || !available()) return;
-  if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+  if (flushing || typeof indexedDB === "undefined" || !navigator.onLine) return;
   flushing = true;
-  try {
+  const send = async () => {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id;
     if (!uid) return;
-    // Surveys first, so memos follow in the same order as on the phone.
-    const items = (await listOutbox())
-      .filter((i) => i.userId === uid)
-      .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "survey" ? -1 : 1));
+    const items = (await listOutbox()).filter(i => i.userId === uid).sort((a,b) => a.kind === b.kind ? 0 : a.kind === "survey" ? -1 : 1);
     for (const item of items) {
+      if (item.blocked || (item.retryAt ?? 0) > Date.now()) continue;
+      // Never send a memo ahead of a still-pending survey for that day.
+      if (item.kind === "memo" && await hasPending(uid, "survey", item.date)) continue;
       try {
         if (item.kind === "memo") {
-          const up = await supabase.storage
-            .from("voice-memos")
-            .upload(item.path, item.blob, { contentType: item.blob.type || "audio/webm", upsert: false });
-          if (up.error && !/exists|duplicate/i.test(up.error.message)) {
-            if (isNetworkError(up.error)) break;
-            continue;
-          }
-          const { error } = await supabase.from("voice_memos").insert(item.row as never);
-          if (error && error.code !== "23505") {
-            if (isNetworkError(error)) break;
-            continue;
-          }
-        } else {
-          const { error } = await supabase.from("survey_responses").insert(item.row as never);
-          if (error && error.code !== "23505") {
-            if (isNetworkError(error)) break;
-            continue;
-          }
+          const up = await supabase.storage.from("voice-memos").upload(item.path, item.blob, { contentType: item.blob.type || "audio/webm", upsert: false });
+          if (up.error && !/exists|duplicate/i.test(up.error.message)) throw up.error;
         }
-        await remove(item.id);
-      } catch (e) {
-        if (isNetworkError(e)) break;
+        const table = item.kind === "memo" ? "voice_memos" : "survey_responses";
+        const { error } = await supabase.from(table).insert(item.row as never);
+        if (error && error.code !== "23505") throw error;
+        await tx("readwrite", s => s.delete(item.id));
+        changed();
+      } catch (error) {
+        const attempts = (item.attempts ?? 0) + 1;
+        const status = Number((error as { status?: number; statusCode?: number })?.status ?? (error as { statusCode?: number })?.statusCode);
+        const temporary = isNetworkError(error) || status === 401;
+        await enqueue({ ...item, attempts, retryAt: Date.now() + retryDelay(attempts - 1), blocked: !temporary });
+        if (status === 401) await supabase.auth.refreshSession();
+        // Back off the entire queue during overload, not one request per item.
+        if (temporary) break;
       }
     }
-  } finally {
-    flushing = false;
-    window.dispatchEvent(new Event("outbox-change"));
-  }
+  };
+  try {
+    if (navigator.locks) await navigator.locks.request("feed-outbox-send", { ifAvailable: true }, lock => lock ? send() : Promise.resolve());
+    else await send();
+  } finally { flushing = false; changed(); }
 }
-
-/** Start background sending: on reconnect, on return to the app, and every 30 s. Returns cleanup. */
+export async function retryPending() {
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user.id;
+  for (const item of await listOutbox()) if (item.userId === uid) await enqueue({ ...item, retryAt: 0, blocked: false });
+  await flushOutbox();
+}
 export function startOutboxSync() {
-  const run = () => void flushOutbox();
-  const onVis = () => document.visibilityState === "visible" && run();
+  const run = () => { void flushOutbox().catch(() => undefined); };
+  const onVis = () => { if (document.visibilityState === "visible") run(); };
   window.addEventListener("online", run);
   document.addEventListener("visibilitychange", onVis);
-  const t = setInterval(run, 30_000);
+  const timer = setInterval(run, 5000);
   run();
-  return () => {
-    window.removeEventListener("online", run);
-    document.removeEventListener("visibilitychange", onVis);
-    clearInterval(t);
-  };
+  return () => { window.removeEventListener("online", run); document.removeEventListener("visibilitychange", onVis); clearInterval(timer); };
 }

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
 import { LIKERT_LABELS, LIKERT_MAX, LIKERT_MIN, SURVEY_ITEMS, type SurveyKey } from "@/lib/study";
-import { enqueue, isNetworkError } from "@/lib/outbox";
+import { enqueue, flushOutbox } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/survey")({
   beforeLoad: async ({ context }) => {
@@ -49,37 +49,24 @@ function SurveyPage() {
       user_id: user.id,
       username,
       survey_date: surveyStatus.date,
-      glad: answers.glad!,
-      tilfreds: answers.tilfreds!,
-      haebefuld: answers.haebefuld!,
-      bekymret: answers.bekymret!,
-      ensom: answers.ensom!,
-      irritabel: answers.irritabel!,
+      glad: answers.glad,
+      tilfreds: answers.tilfreds,
+      haebefuld: answers.haebefuld,
+      bekymret: answers.bekymret,
+      ensom: answers.ensom,
+      irritabel: answers.irritabel,
       feed_seconds_at_submit: surveyStatus.secondsToday,
+      submitted_at: new Date().toISOString(),
     };
-    let error: { code?: string; message?: string } | null = null;
     try {
-      ({ error } = await supabase.from("survey_responses").insert(row));
-    } catch (e) {
-      error = { message: String(e) };
-    }
-    if (error && error.code !== "23505" && isNetworkError(error)) {
-      await enqueue({ kind: "survey", id: crypto.randomUUID(), userId: user.id, date: surveyStatus.date, row });
+      await enqueue({ kind: "survey", id: `${user.id}:survey:${surveyStatus.date}`, userId: user.id, date: surveyStatus.date, row });
+    } catch {
       setBusy(false);
-      toast.success("Ingen forbindelse – dine svar er gemt på telefonen og sendes automatisk.");
-      navigate({ to: "/memo", replace: true });
-      return;
-    }
-    setBusy(false);
-    if (error) {
-      if (error.code === "23505") {
-        navigate({ to: "/memo", replace: true });
-        return;
-      }
       toast.error("Kunne ikke gemme dine svar. Prøv venligst igen.");
       return;
     }
-    toast.success("Tak! Din besvarelse er gemt.");
+    void flushOutbox().catch(() => undefined);
+    setBusy(false);
     navigate({ to: "/memo", replace: true });
   }
 
