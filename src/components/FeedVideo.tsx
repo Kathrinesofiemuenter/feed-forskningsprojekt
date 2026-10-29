@@ -17,6 +17,8 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
   const ref = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(false);
   const [paused, setPaused] = useState(false);
+  // True when the browser blocked sound or autoplay and only a tap can unlock it.
+  const [needsTap, setNeedsTap] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -30,6 +32,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
           el.play().catch(() => {
             // Autoplay with sound can be blocked: retry silently, sound returns on tap.
             el.muted = true;
+            setNeedsTap(true);
             el.play().catch(() => setPaused(true));
           });
         } else {
@@ -49,6 +52,15 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
     el.muted = muted;
     if (!muted && active && el.paused) el.play().catch(() => undefined);
   }, [muted, active]);
+
+  function unlockSound() {
+    const el = ref.current;
+    if (!el) return;
+    setNeedsTap(false);
+    if (muted) onToggleMute();
+    el.muted = false;
+    el.play().then(() => setPaused(false)).catch(() => undefined);
+  }
 
   function togglePlay() {
     const el = ref.current;
@@ -87,6 +99,15 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
           className="absolute inset-0 m-auto flex size-24 items-center justify-center rounded-full bg-foreground/15 backdrop-blur-sm"
         >
           <Play className="size-10 fill-current text-foreground" />
+        </button>
+      )}
+      {needsTap && active && (
+        <button
+          type="button"
+          onClick={unlockSound}
+          className="absolute left-1/2 top-[max(1.5rem,env(safe-area-inset-top))] z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground/15 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur-md"
+        >
+          <VolumeX className="size-4" /> Tryk for lyd
         </button>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />

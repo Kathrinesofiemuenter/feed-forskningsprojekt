@@ -41,8 +41,11 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [waitNote, setWaitNote] = useState<string | null>(null);
+  // False until the page is interactive, so an early tap can't trigger a plain form reload.
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    setReady(true);
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/feed", replace: true });
     });
@@ -139,7 +142,7 @@ function AuthPage() {
           ))}
         </div>
 
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} method="post" action="#" className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Brugernavn
@@ -169,10 +172,10 @@ function AuthPage() {
           </label>
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !ready}
             className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
           >
-            {busy && <Loader2 className="size-4 animate-spin" />}
+            {(busy || !ready) && <Loader2 className="size-4 animate-spin" />}
             {mode === "signin" ? "Log ind" : "Opret konto"}
           </button>
           {waitNote && <p className="text-center text-xs text-muted-foreground">{waitNote}</p>}

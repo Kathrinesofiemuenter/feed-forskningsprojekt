@@ -27,6 +27,8 @@ function pickMime(): string {
   return "";
 }
 
+const SILENCE_RMS = 0.01;
+
 function MemoPage() {
   const { user, surveyStatus } = Route.useRouteContext();
   const navigate = useNavigate();
@@ -35,6 +37,9 @@ function MemoPage() {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [micDenied, setMicDenied] = useState(false);
+  const peakRef = useRef(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const recRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef = useRef(0);
@@ -54,12 +59,44 @@ function MemoPage() {
   async function start() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicDenied(false);
+      // Track the loudest level heard so silent recordings can be rejected.
+      peakRef.current = 0;
+      try {
+        const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new Ctx();
+        audioCtxRef.current = ctx;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 1024;
+        ctx.createMediaStreamSource(stream).connect(analyser);
+        const buf = new Uint8Array(analyser.fftSize);
+        const tick = () => {
+          if (ctx.state === "closed") return;
+          analyser.getByteTimeDomainData(buf);
+          let sum = 0;
+          for (const v of buf) sum += ((v - 128) / 128) ** 2;
+          const rms = Math.sqrt(sum / buf.length);
+          if (rms > peakRef.current) peakRef.current = rms;
+          requestAnimationFrame(tick);
+        };
+        tick();
+      } catch {
+        peakRef.current = 1; // can't measure: don't block the participant
+      }
       const mime = pickMime();
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       const chunks: Blob[] = [];
       rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        audioCtxRef.current?.close().catch(() => undefined);
+        audioCtxRef.current = null;
+        if (peakRef.current < SILENCE_RMS) {
+          setElapsed(0);
+          setState("idle");
+          toast.error("Vi kunne ikke høre noget i optagelsen. Tjek at mikrofonen ikke er dækket, og optag igen.", { duration: 8000 });
+          return;
+        }
         durationRef.current = Math.min(MEMO_MAX_SECONDS, Math.max(1, Math.floor((Date.now() - startRef.current) / 1000)));
         const b = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
         setBlob(b);
@@ -76,8 +113,10 @@ function MemoPage() {
         setElapsed(Math.min(s, MEMO_MAX_SECONDS));
         if (s >= MEMO_MAX_SECONDS) stop();
       }, 250);
-    } catch {
-      toast.error("Kunne ikke få adgang til mikrofonen. Tillad mikrofonadgang og prøv igen.");
+    } catch (e) {
+      const name = (e as { name?: string })?.name;
+      if (name === "NotAllowedError" || name === "SecurityError") setMicDenied(true);
+      else toast.error("Kunne ikke få adgang til mikrofonen. Tillad mikrofonadgang og prøv igen.");
     }
   }
 
@@ -148,6 +187,35 @@ function MemoPage() {
           {formatMinutes(state === "recording" ? elapsed : state === "done" ? durationRef.current : 0)}
         </div>
 
+        {state === "idle" && !micDenied && (
+          <p className="max-w-xs text-center text-sm text-muted-foreground">
+            Appen bruger mikrofonen til at optage din stemmebesked. Når du trykker på knappen, spørger telefonen om lov – tryk "Tillad".
+          </p>
+        )}
+        {micDenied && (
+          <div className="w-full space-y-3 rounded-2xl border border-border bg-card p-4 text-sm">
+            <p className="font-semibold">Mikrofonen er blokeret</p>
+            <p className="text-muted-foreground">Sådan giver du adgang igen:</p>
+            <div>
+              <p className="font-semibold">iPhone</p>
+              <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
+                <li>Åbn Indstillinger.</li>
+                <li>Gå til Apps → Safari → Mikrofon (eller Safari → Mikrofon på ældre iPhones).</li>
+                <li>Vælg "Spørg" eller "Tillad".</li>
+                <li>Luk appen helt, åbn den igen, og tryk på mikrofonen.</li>
+              </ol>
+            </div>
+            <div>
+              <p className="font-semibold">Android</p>
+              <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
+                <li>Åbn Chrome, og tryk på ⋮ øverst til højre.</li>
+                <li>Tryk Indstillinger → Webstedsindstillinger → Mikrofon.</li>
+                <li>Find denne side under "Blokeret", og vælg "Tillad".</li>
+                <li>Luk appen helt, åbn den igen, og tryk på mikrofonen.</li>
+              </ol>
+            </div>
+          </div>
+        )}
         {state === "idle" && (
           <button type="button" onClick={start} aria-label="Start optagelse"
             className="flex size-28 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-lg shadow-destructive/30 active:scale-95">
