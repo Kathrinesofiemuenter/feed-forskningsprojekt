@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
-import { ArrowLeft, Clapperboard, Table2 } from "lucide-react";
+import { ArrowLeft, Clapperboard, Table2, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -32,6 +32,9 @@ function AdminLayout() {
           </Link>
           <Link to="/admin/analytics" className={tab} activeProps={{ className: `${tab} ${active}` }}>
             <Table2 className="size-4" /> Survey responses
+          </Link>
+          <Link to="/admin/users" className={tab} activeProps={{ className: `${tab} ${active}` }}>
+            <KeyRound className="size-4" /> Adgangskoder
           </Link>
         </nav>
       </header>
