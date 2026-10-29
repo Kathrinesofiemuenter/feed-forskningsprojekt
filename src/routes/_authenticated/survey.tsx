@@ -124,7 +124,7 @@ function SurveyPage() {
         })}
       </ol>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8">
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+2rem)] pt-8">
         <div className="mx-auto max-w-md">
           <button
             type="button"

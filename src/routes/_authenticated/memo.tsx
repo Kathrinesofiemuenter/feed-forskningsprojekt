@@ -225,7 +225,7 @@ function MemoPage() {
         <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground/80">Optag 1 minut stemmebesked</p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8">
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-background via-background/95 to-transparent px-5 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+2rem)] pt-8">
         <div className="mx-auto max-w-md">
           <button type="button" onClick={submit} disabled={state !== "done" || busy}
             className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none">

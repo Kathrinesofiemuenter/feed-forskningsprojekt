@@ -227,7 +227,10 @@ function FeedPage() {
           )}
         </div>
       ) : (
-        <main ref={feedRef} className="snap-feed h-full w-full overflow-y-scroll">
+        <main ref={feedRef} onScroll={event => {
+          const el = event.currentTarget;
+          setCurrent(Math.min(videos.length - 1, Math.max(0, Math.round(el.scrollTop / el.clientHeight))));
+        }} className="snap-feed h-full w-full overflow-y-scroll">
           {videos.map((v, i) => (
             <div key={v.id} className="h-dvh w-full snap-start snap-always">
               {Math.abs(i - current) <= 2 && <FeedVideo
