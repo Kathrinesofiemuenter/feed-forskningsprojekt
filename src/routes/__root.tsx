@@ -184,6 +184,12 @@ function RootComponent() {
     };
   }, []);
 
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    void import("@/lib/outbox").then((m) => { stop = m.startOutboxSync(); });
+    return () => stop?.();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

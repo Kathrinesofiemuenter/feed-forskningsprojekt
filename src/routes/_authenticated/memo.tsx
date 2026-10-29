@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
 import { MEMO_MAX_SECONDS, MEMO_PROMPT, MEMO_SUBPROMPT, formatMinutes } from "@/lib/study";
+import { enqueue, isNetworkError } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/memo")({
   head: () => ({ meta: [{ title: "Stemmebesked – Feed-forskningsprojekt" }] }),
@@ -90,21 +91,43 @@ function MemoPage() {
   async function submit() {
     if (!blob) return;
     setBusy(true);
-    const me = await fetchCurrentUser();
-    if (!me) { setBusy(false); navigate({ to: "/auth" }); return; }
+    const me = await fetchCurrentUser().catch(() => null);
+    const username = me?.username ?? (user.user_metadata?.["username"] as string | undefined);
+    if (!username) { setBusy(false); navigate({ to: "/auth" }); return; }
     const type = blob.type || "audio/webm";
     const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
     const path = `${user.id}/${surveyStatus.date}-${crypto.randomUUID()}.${ext}`;
-    const up = await supabase.storage.from("voice-memos").upload(path, blob, { contentType: type });
-    if (up.error) { setBusy(false); toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen."); return; }
-    const { error } = await supabase.from("voice_memos").insert({
+    const row = {
       user_id: user.id,
-      username: me.username,
+      username,
       memo_date: surveyStatus.date,
       storage_path: path,
       duration_seconds: durationRef.current,
       mime_type: type,
-    });
+    };
+    const saveLocally = async () => {
+      await enqueue({ kind: "memo", id: crypto.randomUUID(), userId: user.id, date: surveyStatus.date, path, blob, row });
+      setBusy(false);
+      toast.success("Ingen forbindelse – din stemmebesked er gemt på telefonen og sendes automatisk.");
+      navigate({ to: "/feed", replace: true });
+    };
+    let upErr: { message?: string } | null = null;
+    try {
+      upErr = (await supabase.storage.from("voice-memos").upload(path, blob, { contentType: type })).error;
+    } catch (e) {
+      upErr = { message: String(e) };
+    }
+    if (upErr) {
+      if (isNetworkError(upErr)) return saveLocally();
+      setBusy(false); toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen."); return;
+    }
+    let error: { code?: string; message?: string } | null = null;
+    try {
+      ({ error } = await supabase.from("voice_memos").insert(row));
+    } catch (e) {
+      error = { message: String(e) };
+    }
+    if (error && error.code !== "23505" && isNetworkError(error)) return saveLocally();
     setBusy(false);
     if (error && error.code !== "23505") { toast.error("Kunne ikke gemme stemmebeskeden. Prøv venligst igen."); return; }
     toast.success("Tak! Din stemmebesked er gemt.");

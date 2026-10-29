@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSurveyStatus } from "@/lib/survey-status";
 import { fetchCurrentUser } from "@/hooks/useCurrentUser";
 import { LIKERT_LABELS, LIKERT_MAX, LIKERT_MIN, SURVEY_ITEMS, type SurveyKey } from "@/lib/study";
+import { enqueue, isNetworkError } from "@/lib/outbox";
 
 export const Route = createFileRoute("/_authenticated/survey")({
   beforeLoad: async ({ context }) => {
@@ -36,15 +37,17 @@ function SurveyPage() {
       return;
     }
     setBusy(true);
-    const me = await fetchCurrentUser();
-    if (!me) {
+    const me = await fetchCurrentUser().catch(() => null);
+    const username =
+      me?.username ?? (user.user_metadata?.["username"] as string | undefined);
+    if (!username) {
       setBusy(false);
       navigate({ to: "/auth" });
       return;
     }
-    const { error } = await supabase.from("survey_responses").insert({
+    const row = {
       user_id: user.id,
-      username: me.username,
+      username,
       survey_date: surveyStatus.date,
       glad: answers.glad!,
       tilfreds: answers.tilfreds!,
@@ -53,7 +56,20 @@ function SurveyPage() {
       ensom: answers.ensom!,
       irritabel: answers.irritabel!,
       feed_seconds_at_submit: surveyStatus.secondsToday,
-    });
+    };
+    let error: { code?: string; message?: string } | null = null;
+    try {
+      ({ error } = await supabase.from("survey_responses").insert(row));
+    } catch (e) {
+      error = { message: String(e) };
+    }
+    if (error && error.code !== "23505" && isNetworkError(error)) {
+      await enqueue({ kind: "survey", id: crypto.randomUUID(), userId: user.id, date: surveyStatus.date, row });
+      setBusy(false);
+      toast.success("Ingen forbindelse – dine svar er gemt på telefonen og sendes automatisk.");
+      navigate({ to: "/memo", replace: true });
+      return;
+    }
     setBusy(false);
     if (error) {
       if (error.code === "23505") {
