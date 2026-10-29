@@ -9,4 +9,4 @@
 - [x] Change the check-in scale to five buttons, 1–5, one choice per feeling.
 - [x] Apply the revised Danish front-page wording, make 5 read "I meget høj grad", and give the feed points icon bubbles like the check-in cards.
 - [x] Auto-retry logins so a whole room on one Wi-Fi signing in at once still gets in.
-- [ ] Test 100 concurrent logins, feed playback/usage, survey submissions, and voice memo uploads; verify saved data and clean temporary test records.
+- [x] Test 100 concurrent login/feed requests, survey submissions, and voice memo uploads; verify saved data and clean temporary test records. Capacity failures and playback limits documented in load-test-report.md; no claim of 100-device readiness.
