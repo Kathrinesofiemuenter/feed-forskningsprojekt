@@ -10,3 +10,7 @@
 - [x] Apply the revised Danish front-page wording, make 5 read "I meget høj grad", and give the feed points icon bubbles like the check-in cards.
 - [x] Auto-retry logins so a whole room on one Wi-Fi signing in at once still gets in.
 - [x] Test 100 concurrent login/feed requests, survey submissions, and voice memo uploads; verify saved data and clean temporary test records. Capacity failures and playback limits documented in load-test-report.md; no claim of 100-device readiness.
+- [ ] Load only nearby video links and recover stalled playback without preparing the entire feed.
+- [ ] Extend and spread out temporary login retries.
+- [ ] Save survey/memo locally before sending, retry temporary refusals, and show delivery status.
+- [ ] Verify improvements with tests and real survey/recording flow; assess video compatibility separately without replacing originals.

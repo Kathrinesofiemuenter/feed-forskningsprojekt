@@ -4,8 +4,7 @@ import { toast } from "sonner";
 import { Play, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { USERNAME_RE, usernameToEmail } from "@/lib/study";
-
-const RETRY_WAITS_MS = [2000, 5000, 9000];
+import { LOGIN_RETRY_WAITS_MS } from "@/lib/reliability";
 
 type SignInError = NonNullable<Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"]>;
 
@@ -56,9 +55,9 @@ function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error) return null;
       if (!isRateLimited(error)) return error;
-      if (attempt >= RETRY_WAITS_MS.length) return error;
+      if (attempt >= LOGIN_RETRY_WAITS_MS.length) return error;
       setWaitNote("Der er mange, der logger ind lige nu. Vi prøver igen om et øjeblik – du behøver ikke gøre noget.");
-      await sleep((RETRY_WAITS_MS[attempt] ?? 9000) + Math.floor(Math.random() * 1500));
+      await sleep((LOGIN_RETRY_WAITS_MS[attempt] ?? 60000) + Math.floor(Math.random() * 5000));
     }
   }
 
