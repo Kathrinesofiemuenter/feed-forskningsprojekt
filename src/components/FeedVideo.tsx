@@ -47,6 +47,24 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
     return () => { cancelled = true; };
   }, [src, active, near, muted]);
 
+  // If the browser forced this video silent, restore sound on the participant's
+  // next touch or swipe anywhere, instead of leaving it muted.
+  useEffect(() => {
+    if (!needsTap || muted || !active) return;
+    const restore = () => {
+      const el = ref.current;
+      if (!el) return;
+      el.muted = false;
+      void el.play().then(() => setNeedsTap(false)).catch(() => { el.muted = true; });
+    };
+    window.addEventListener("touchend", restore, true);
+    window.addEventListener("click", restore, true);
+    return () => {
+      window.removeEventListener("touchend", restore, true);
+      window.removeEventListener("click", restore, true);
+    };
+  }, [needsTap, muted, active]);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -129,6 +147,7 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
 
       <Button variant="ghost"
         type="button"
+        onPointerDown={e => e.stopPropagation()}
         onClick={onToggleMute}
         aria-label={muted ? "Unmute" : "Mute"}
         className="absolute bottom-28 right-4 flex size-14 items-center justify-center rounded-full bg-foreground/10 text-foreground backdrop-blur-md transition-transform active:scale-90"
