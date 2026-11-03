@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Convert the 69 newly uploaded, unconverted videos; verify playback/audio and retain original backups.
+
 - [x] Remove automatic silent fallback and neighbor playback; default sound on and respect explicit mute. Three tests and ten consecutive audible browser videos passed; actual affected phone remains unverified and changes are not published.
 
 - [x] Convert 67 newly uploaded videos (3 November 2026), including uploads finishing during conversion; playback/audio verified 67/67, 3,060.4 MB reduced to 315.8 MB; video identities and original backups preserved.
