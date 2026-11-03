@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Convert the 69 newly uploaded, unconverted videos; verify playback/audio and retain original backups.
+- [ ] Convert the 69 newly uploaded videos plus 37 additional uploads; verify playback/audio and retain original backups.
 
 - [x] Remove automatic silent fallback and neighbor playback; default sound on and respect explicit mute. Three tests and ten consecutive audible browser videos passed; actual affected phone remains unverified and changes are not published.
 
