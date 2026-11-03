@@ -13,3 +13,4 @@
 - Reuse unexpired signed media links across overlapping feed windows and centralize automatic playback; changing a buffered source or seeking during visibility changes causes startup restarts.
 - Persist survey and memo submissions to the device outbox before network delivery; commit IndexedDB transactions before navigating, scope sync to the signed-in user, and back off temporary failures without discarding payloads.
 - Use the shared reliability policy for login and delivery retries so concurrent participants spread requests over time rather than retrying in synchronized bursts.
+- Route-selected feed index controls active playback; use the shared playback helper without silently muting or playing neighboring elements, so sound follows explicit participant preference.

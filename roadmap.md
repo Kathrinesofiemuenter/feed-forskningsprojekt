@@ -2,7 +2,7 @@
 
 - [ ] Fix recurring silent playback: videos start with sound unless the participant explicitly uses the mute button; investigate and test across multiple consecutive videos.
 
-- [ ] Convert newly uploaded videos (3 November 2026), including uploads finishing during conversion. First 36 converted and playback/audio verified; 1,757.4 MB reduced to 193.8 MB. Processing another 31; preserve video identities and original backups.
+- [x] Convert 67 newly uploaded videos (3 November 2026), including uploads finishing during conversion; playback/audio verified 67/67, 3,060.4 MB reduced to 315.8 MB; video identities and original backups preserved.
 
 - [x] Repeat the published 100-user test with an independently checked recording setup, verify stored submissions and remove all temporary accounts/data; 100 datasets eventually verified after two follow-ups, not an uninterrupted pass. Playback remains unverified; findings recorded in load-test-report.md.
 
