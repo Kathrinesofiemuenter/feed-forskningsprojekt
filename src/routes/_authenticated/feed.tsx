@@ -38,7 +38,9 @@ async function fetchFeed(userId: string) {
       .order("created_at"),
     supabase.from("video_views").select("video_id").eq("user_id", userId).limit(10000),
   ]);
-  if (error) throw error;
+  // Throw a real Error (plain objects render as "[object Object]"). A phone clock
+  // slightly behind the server gives "JWT issued at future"; the query retries it.
+  if (error) throw Object.assign(new Error(error.message), { code: error.code });
   const seen = new Set((views ?? []).map((v) => v.video_id));
   let pool = (data ?? []).filter((v) => !seen.has(v.id));
   // Everything watched: start a fresh round with all videos.
@@ -64,6 +66,9 @@ function FeedPage() {
     gcTime: 0,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    retry: 6,
+    retryDelay: attempt => retryDelay(attempt),
+    throwOnError: false,
   });
   const [muted, setMuted] = useState(true);
   const [current, setCurrent] = useState(0);
