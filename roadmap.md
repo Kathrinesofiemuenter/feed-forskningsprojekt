@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Convert newly uploaded videos (3 November 2026), verify private MP4 playback and preserve video identities.
+
 - [x] Repeat the published 100-user test with an independently checked recording setup, verify stored submissions and remove all temporary accounts/data; 100 datasets eventually verified after two follow-ups, not an uninterrupted pass. Playback remains unverified; findings recorded in load-test-report.md.
 
 - [x] Convert existing feed videos to playback-compatible, smaller MP4 files, preserving content, identity and private access.
