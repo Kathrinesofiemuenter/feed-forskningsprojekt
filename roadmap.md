@@ -1,6 +1,6 @@
 # Roadmap
 
-- [x] Convert 18 newly uploaded videos (3 November 2026), verify private MP4 playback and audio (18/18), preserve video identities and original backups; 856.2 MB reduced to 101.8 MB.
+- [ ] Convert newly uploaded videos (3 November 2026), including uploads finishing during conversion. First 36 converted and playback/audio verified; 1,757.4 MB reduced to 193.8 MB. Processing another 31; preserve video identities and original backups.
 
 - [x] Repeat the published 100-user test with an independently checked recording setup, verify stored submissions and remove all temporary accounts/data; 100 datasets eventually verified after two follow-ups, not an uninterrupted pass. Playback remains unverified; findings recorded in load-test-report.md.
 
