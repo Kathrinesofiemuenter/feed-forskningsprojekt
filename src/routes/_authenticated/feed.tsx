@@ -70,7 +70,7 @@ function FeedPage() {
     retryDelay: attempt => retryDelay(attempt),
     throwOnError: false,
   });
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [current, setCurrent] = useState(0);
   const feedRef = useRef<HTMLElement>(null);
   const [linkCache] = useState(() => new FeedUrlCache());
@@ -182,7 +182,6 @@ function FeedPage() {
   return (
     <div
       className="relative h-dvh w-full overflow-hidden bg-background"
-      onPointerDown={() => setMuted(false)}
     >
       <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 bg-gradient-to-b from-background via-background/50 to-transparent px-4 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto min-w-0">
@@ -209,12 +208,6 @@ function FeedPage() {
           </button>
         </div>
       </header>
-
-      {muted && videos && videos.length > 0 && (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/15 px-5 py-2.5 text-xs font-black uppercase tracking-[0.2em] backdrop-blur-md">
-          Tryk for lyd
-        </div>
-      )}
 
       {isLoading ? (
         <div className="flex h-full items-center justify-center">
@@ -246,6 +239,7 @@ function FeedPage() {
                 index={i}
                 total={videos.length}
                 muted={muted}
+                active={i === current}
                 onToggleMute={() => setMuted(m => !m)}
                 near={i >= current && i <= current + 1}
                 eager={i === current}

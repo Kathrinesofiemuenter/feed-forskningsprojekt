@@ -1,6 +1,8 @@
 # Roadmap
 
-- [ ] Convert newly uploaded videos (3 November 2026), verify private MP4 playback and preserve video identities.
+- [x] Remove automatic silent fallback and neighbor playback; default sound on and respect explicit mute. Three tests and ten consecutive audible browser videos passed; actual affected phone remains unverified and changes are not published.
+
+- [x] Convert 67 newly uploaded videos (3 November 2026), including uploads finishing during conversion; playback/audio verified 67/67, 3,060.4 MB reduced to 315.8 MB; video identities and original backups preserved.
 
 - [x] Repeat the published 100-user test with an independently checked recording setup, verify stored submissions and remove all temporary accounts/data; 100 datasets eventually verified after two follow-ups, not an uninterrupted pass. Playback remains unverified; findings recorded in load-test-report.md.
 
