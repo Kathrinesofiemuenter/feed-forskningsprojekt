@@ -23,12 +23,20 @@ type VideoRow = {
 };
 
 async function fetchVideos(): Promise<VideoRow[]> {
-  const { data, error } = await supabase
-    .from("videos")
-    .select("id, title, storage_path, is_active, sort_order, created_at")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  // The backend returns at most 1000 rows per request, so page through all of them.
+  const all: VideoRow[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("videos")
+      .select("id, title, storage_path, is_active, sort_order, created_at")
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range(from, from + 999);
+    if (error) throw error;
+    all.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return all;
 }
 
 function AdminVideos() {

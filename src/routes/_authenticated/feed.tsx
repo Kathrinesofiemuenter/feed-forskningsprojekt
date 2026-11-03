@@ -28,19 +28,36 @@ export const Route = createFileRoute("/_authenticated/feed")({
   component: FeedPage,
 });
 
+async function fetchAllPages<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string; code?: string } | null }>,
+): Promise<T[]> {
+  const all: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    // Throw a real Error (plain objects render as "[object Object]").
+    if (error) throw Object.assign(new Error(error.message), { code: error.code });
+    all.push(...(data ?? []));
+    if (!data || data.length < 1000) return all;
+  }
+}
+
 async function fetchFeed(userId: string) {
-  const [{ data, error }, { data: views }] = await Promise.all([
-    supabase
-      .from("videos")
-      .select("id, title, storage_path")
-      .eq("is_active", true)
-      .order("sort_order")
-      .order("created_at"),
-    supabase.from("video_views").select("video_id").eq("user_id", userId).limit(10000),
+  // The backend caps each request at 1000 rows, so page through everything.
+  const [data, views] = await Promise.all([
+    fetchAllPages<{ id: string; title: string; storage_path: string }>((from, to) =>
+      supabase
+        .from("videos")
+        .select("id, title, storage_path")
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("created_at")
+        .order("id")
+        .range(from, to),
+    ),
+    fetchAllPages<{ video_id: string }>((from, to) =>
+      supabase.from("video_views").select("video_id").eq("user_id", userId).order("video_id").range(from, to),
+    ),
   ]);
-  // Throw a real Error (plain objects render as "[object Object]"). A phone clock
-  // slightly behind the server gives "JWT issued at future"; the query retries it.
-  if (error) throw Object.assign(new Error(error.message), { code: error.code });
   const seen = new Set((views ?? []).map((v) => v.video_id));
   let pool = (data ?? []).filter((v) => !seen.has(v.id));
   // Everything watched: start a fresh round with all videos.
