@@ -65,6 +65,28 @@ export function FeedVideo({ src, title, index, total, muted, onToggleMute, near,
     };
   }, [needsTap, muted, active]);
 
+  // Phones only allow sound on a video that was started during a touch. The next
+  // video is started by scrolling (no touch), so it gets silenced. To prevent that,
+  // briefly start the upcoming video with sound during each touch, then pause it,
+  // which unlocks sound for it before the participant arrives.
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  useEffect(() => {
+    if (muted || active || !near || !src) return;
+    const prime = () => {
+      const el = ref.current;
+      if (!el || activeRef.current || !el.paused) return;
+      el.muted = false;
+      void el.play().then(() => { if (!activeRef.current) el.pause(); }).catch(() => undefined);
+    };
+    window.addEventListener("touchend", prime, true);
+    window.addEventListener("click", prime, true);
+    return () => {
+      window.removeEventListener("touchend", prime, true);
+      window.removeEventListener("click", prime, true);
+    };
+  }, [muted, active, near, src]);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
