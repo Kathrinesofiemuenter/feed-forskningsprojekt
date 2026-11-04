@@ -25,12 +25,45 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  const [ready, setReady] = useState(false);
+  const userPaused = useRef(false);
 
   useEffect(() => {
     setFailed(false);
     setWaiting(false);
     setSoundBlocked(false);
+    setReady(false);
   }, [src]);
+
+  // Resume when the participant returns to the app (phones pause media in the background).
+  useEffect(() => {
+    if (!active || !near || !src) return;
+    const resume = () => {
+      const el = ref.current;
+      if (document.visibilityState !== "visible" || !el || userPaused.current || !el.paused) return;
+      void el.play().catch(() => { el.muted = true; void el.play().catch(() => setPaused(true)); });
+    };
+    document.addEventListener("visibilitychange", resume);
+    window.addEventListener("pageshow", resume);
+    return () => {
+      document.removeEventListener("visibilitychange", resume);
+      window.removeEventListener("pageshow", resume);
+    };
+  }, [active, near, src]);
+
+  // Watchdog: if the active video still shows no picture after a few seconds, reload it once more.
+  useEffect(() => {
+    if (!active || !near || !src || ready) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      const el = ref.current;
+      if (!el || el.readyState >= 2 || tries >= 2) return;
+      tries++;
+      el.load();
+      void el.play().catch(() => { el.muted = true; void el.play().catch(() => undefined); });
+    }, 6000);
+    return () => clearInterval(t);
+  }, [active, near, src, ready]);
 
   useEffect(() => {
     const el = ref.current;
@@ -101,10 +134,11 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     if (!el) return;
     if (el.paused) {
       el.play()
-        .then(() => setPaused(false))
+        .then(() => { userPaused.current = false; setPaused(false); })
         .catch(() => undefined);
     } else {
       el.pause();
+      userPaused.current = true;
       setPaused(true);
     }
   }
@@ -125,11 +159,12 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
         onClick={togglePlay}
         onPlay={() => setPaused(false)}
         onWaiting={() => setWaiting(true)}
-        onPlaying={() => { setWaiting(false); setFailed(false); }}
+        onLoadedData={() => setReady(true)}
+        onPlaying={() => { setReady(true); setWaiting(false); setFailed(false); }}
         onCanPlay={() => setWaiting(false)}
         onError={() => { if (src && near) setFailed(true); }}
       />
-      {active && (!src || waiting) && !failed && <Loader2 aria-label="Indlæser video" className="absolute inset-0 m-auto size-6 animate-spin text-muted-foreground" />}
+      {active && (!src || waiting || !ready) && !failed && !paused && <Loader2 aria-label="Indlæser video" className="absolute inset-0 m-auto size-6 animate-spin text-muted-foreground" />}
       {failed && active && <Button variant="secondary" size="icon" onClick={onSkip} aria-label="Næste video" title="Næste video" className="absolute inset-0 m-auto size-14"><SkipForward /></Button>}
       {paused && active && !failed && src && (
         <Button variant="ghost"
