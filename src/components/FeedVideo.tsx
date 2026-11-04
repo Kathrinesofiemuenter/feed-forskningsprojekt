@@ -131,7 +131,7 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
       />
       {active && (!src || waiting) && !failed && <Loader2 aria-label="Indlæser video" className="absolute inset-0 m-auto size-6 animate-spin text-muted-foreground" />}
       {failed && active && <Button variant="secondary" size="icon" onClick={onSkip} aria-label="Næste video" title="Næste video" className="absolute inset-0 m-auto size-14"><SkipForward /></Button>}
-      {paused && active && !needsTap && !failed && src && (
+      {paused && active && !failed && src && (
         <Button variant="ghost"
           type="button"
           onClick={togglePlay}
@@ -139,15 +139,6 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
           className="absolute inset-0 m-auto flex size-24 items-center justify-center rounded-full bg-foreground/15 backdrop-blur-sm"
         >
           <Play className="size-10 fill-current text-foreground" />
-        </Button>
-      )}
-      {needsTap && active && (
-        <Button variant="ghost"
-          type="button"
-          onClick={unlockSound}
-          className="absolute left-1/2 top-[max(1.5rem,env(safe-area-inset-top))] z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground/15 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur-md"
-        >
-          <VolumeX className="size-4" /> Tryk for lyd
         </Button>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
