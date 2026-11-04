@@ -96,18 +96,9 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     return () => obs.disconnect();
   }, [index, onActive]);
 
-  function unlockSound() {
-    const el = ref.current;
-    if (!el) return;
-    skipToggleUntil.current = Date.now() + 700;
-    void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
-  }
-
   function togglePlay() {
     const el = ref.current;
     if (!el) return;
-    if (Date.now() < skipToggleUntil.current) return;
-    if (needsTap) { unlockSound(); return; }
     if (el.paused) {
       el.play()
         .then(() => setPaused(false))
