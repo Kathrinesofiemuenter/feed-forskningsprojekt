@@ -20,16 +20,16 @@ type Props = {
 export function FeedVideo({ src, title, index, total, muted, active, onToggleMute, near, eager, onActive, onSkip }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
-  // True when the browser blocked sound or autoplay and only a tap can unlock it.
-  const [needsTap, setNeedsTap] = useState(false);
+  // True when the browser blocked unmuted autoplay. The video still starts on
+  // its own (silently); sound returns on the participant's first touch anywhere.
+  const [soundBlocked, setSoundBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
-  // A tap that already (re)started playback must not also toggle it back to paused.
-  const skipToggleUntil = useRef(0);
 
   useEffect(() => {
     setFailed(false);
     setWaiting(false);
+    setSoundBlocked(false);
   }, [src]);
 
   useEffect(() => {
@@ -42,29 +42,45 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     let cancelled = false;
     void startFeedPlayback(el, muted).then(playing => {
       if (cancelled) return;
-      setNeedsTap(!playing);
-      setPaused(!playing);
+      if (playing) {
+        setSoundBlocked(false);
+        setPaused(false);
+        return;
+      }
+      if (muted) {
+        // Participant muted it themselves and the browser still refused: nothing to do.
+        setPaused(true);
+        return;
+      }
+      // Autoplay with sound was blocked. Start the video anyway (silent) so the
+      // feed never sits on a black screen waiting for a tap; the gesture listener
+      // below turns the sound on as soon as the participant touches the screen.
+      el.muted = true;
+      el.play()
+        .then(() => { if (!cancelled) { setSoundBlocked(true); setPaused(false); } })
+        .catch(() => { if (!cancelled) setPaused(true); });
     });
     return () => { cancelled = true; };
   }, [src, active, near, muted]);
 
   // If the browser forced this video silent, restore sound on the participant's
-  // next touch or swipe anywhere, instead of leaving it muted.
+  // first touch or swipe anywhere — no button press needed.
   useEffect(() => {
-    if (!needsTap || muted || !active) return;
+    if (!soundBlocked || muted || !active) return;
     const restore = () => {
       const el = ref.current;
       if (!el) return;
-      skipToggleUntil.current = Date.now() + 700;
-      void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
+      el.muted = false;
+      if (el.paused) void el.play().catch(() => undefined);
+      setSoundBlocked(false);
     };
-    window.addEventListener("touchend", restore, true);
-    window.addEventListener("click", restore, true);
+    window.addEventListener("pointerdown", restore, true);
+    window.addEventListener("touchstart", restore, true);
     return () => {
-      window.removeEventListener("touchend", restore, true);
-      window.removeEventListener("click", restore, true);
+      window.removeEventListener("pointerdown", restore, true);
+      window.removeEventListener("touchstart", restore, true);
     };
-  }, [needsTap, muted, active]);
+  }, [soundBlocked, muted, active]);
 
   useEffect(() => {
     const el = ref.current;
