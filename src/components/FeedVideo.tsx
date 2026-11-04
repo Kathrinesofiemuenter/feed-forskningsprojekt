@@ -20,16 +20,16 @@ type Props = {
 export function FeedVideo({ src, title, index, total, muted, active, onToggleMute, near, eager, onActive, onSkip }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
-  // True when the browser blocked sound or autoplay and only a tap can unlock it.
-  const [needsTap, setNeedsTap] = useState(false);
+  // True when the browser blocked unmuted autoplay. The video still starts on
+  // its own (silently); sound returns on the participant's first touch anywhere.
+  const [soundBlocked, setSoundBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
-  // A tap that already (re)started playback must not also toggle it back to paused.
-  const skipToggleUntil = useRef(0);
 
   useEffect(() => {
     setFailed(false);
     setWaiting(false);
+    setSoundBlocked(false);
   }, [src]);
 
   useEffect(() => {
@@ -42,29 +42,45 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     let cancelled = false;
     void startFeedPlayback(el, muted).then(playing => {
       if (cancelled) return;
-      setNeedsTap(!playing);
-      setPaused(!playing);
+      if (playing) {
+        setSoundBlocked(false);
+        setPaused(false);
+        return;
+      }
+      if (muted) {
+        // Participant muted it themselves and the browser still refused: nothing to do.
+        setPaused(true);
+        return;
+      }
+      // Autoplay with sound was blocked. Start the video anyway (silent) so the
+      // feed never sits on a black screen waiting for a tap; the gesture listener
+      // below turns the sound on as soon as the participant touches the screen.
+      el.muted = true;
+      el.play()
+        .then(() => { if (!cancelled) { setSoundBlocked(true); setPaused(false); } })
+        .catch(() => { if (!cancelled) setPaused(true); });
     });
     return () => { cancelled = true; };
   }, [src, active, near, muted]);
 
   // If the browser forced this video silent, restore sound on the participant's
-  // next touch or swipe anywhere, instead of leaving it muted.
+  // first touch or swipe anywhere — no button press needed.
   useEffect(() => {
-    if (!needsTap || muted || !active) return;
+    if (!soundBlocked || muted || !active) return;
     const restore = () => {
       const el = ref.current;
       if (!el) return;
-      skipToggleUntil.current = Date.now() + 700;
-      void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
+      el.muted = false;
+      if (el.paused) void el.play().catch(() => undefined);
+      setSoundBlocked(false);
     };
-    window.addEventListener("touchend", restore, true);
-    window.addEventListener("click", restore, true);
+    window.addEventListener("pointerdown", restore, true);
+    window.addEventListener("touchstart", restore, true);
     return () => {
-      window.removeEventListener("touchend", restore, true);
-      window.removeEventListener("click", restore, true);
+      window.removeEventListener("pointerdown", restore, true);
+      window.removeEventListener("touchstart", restore, true);
     };
-  }, [needsTap, muted, active]);
+  }, [soundBlocked, muted, active]);
 
   useEffect(() => {
     const el = ref.current;
@@ -80,18 +96,9 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     return () => obs.disconnect();
   }, [index, onActive]);
 
-  function unlockSound() {
-    const el = ref.current;
-    if (!el) return;
-    skipToggleUntil.current = Date.now() + 700;
-    void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
-  }
-
   function togglePlay() {
     const el = ref.current;
     if (!el) return;
-    if (Date.now() < skipToggleUntil.current) return;
-    if (needsTap) { unlockSound(); return; }
     if (el.paused) {
       el.play()
         .then(() => setPaused(false))
@@ -124,7 +131,7 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
       />
       {active && (!src || waiting) && !failed && <Loader2 aria-label="Indlæser video" className="absolute inset-0 m-auto size-6 animate-spin text-muted-foreground" />}
       {failed && active && <Button variant="secondary" size="icon" onClick={onSkip} aria-label="Næste video" title="Næste video" className="absolute inset-0 m-auto size-14"><SkipForward /></Button>}
-      {paused && active && !needsTap && !failed && src && (
+      {paused && active && !failed && src && (
         <Button variant="ghost"
           type="button"
           onClick={togglePlay}
@@ -132,15 +139,6 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
           className="absolute inset-0 m-auto flex size-24 items-center justify-center rounded-full bg-foreground/15 backdrop-blur-sm"
         >
           <Play className="size-10 fill-current text-foreground" />
-        </Button>
-      )}
-      {needsTap && active && (
-        <Button variant="ghost"
-          type="button"
-          onClick={unlockSound}
-          className="absolute left-1/2 top-[max(1.5rem,env(safe-area-inset-top))] z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground/15 px-4 py-2 text-sm font-semibold text-foreground backdrop-blur-md"
-        >
-          <VolumeX className="size-4" /> Tryk for lyd
         </Button>
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background via-background/60 to-transparent px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-28" />
