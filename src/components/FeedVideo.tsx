@@ -24,6 +24,8 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
   const [needsTap, setNeedsTap] = useState(false);
   const [failed, setFailed] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  // A tap that already (re)started playback must not also toggle it back to paused.
+  const skipToggleUntil = useRef(0);
 
   useEffect(() => {
     setFailed(false);
@@ -53,6 +55,7 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
     const restore = () => {
       const el = ref.current;
       if (!el) return;
+      skipToggleUntil.current = Date.now() + 700;
       void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
     };
     window.addEventListener("touchend", restore, true);
@@ -80,12 +83,15 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
   function unlockSound() {
     const el = ref.current;
     if (!el) return;
+    skipToggleUntil.current = Date.now() + 700;
     void startFeedPlayback(el, muted).then(playing => { setNeedsTap(!playing); setPaused(!playing); });
   }
 
   function togglePlay() {
     const el = ref.current;
     if (!el) return;
+    if (Date.now() < skipToggleUntil.current) return;
+    if (needsTap) { unlockSound(); return; }
     if (el.paused) {
       el.play()
         .then(() => setPaused(false))
@@ -108,7 +114,7 @@ export function FeedVideo({ src, title, index, total, muted, active, onToggleMut
         loop
         playsInline
         muted={muted}
-        preload={near ? (eager ? "auto" : "metadata") : "none"}
+        preload={near ? "auto" : "none"}
         onClick={togglePlay}
         onPlay={() => setPaused(false)}
         onWaiting={() => setWaiting(true)}
