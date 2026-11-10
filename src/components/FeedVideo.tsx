@@ -27,6 +27,7 @@ export function FeedVideo({ src, index, muted, active, onToggleMute, near, onAct
   const [waiting, setWaiting] = useState(false);
   const [ready, setReady] = useState(false);
   const userPaused = useRef(false);
+  const soundTouch = useRef(0);
   const playing = active && near && !!src;
 
   // Attach the shared player to this slide while it is the active one.
@@ -95,6 +96,8 @@ export function FeedVideo({ src, index, muted, active, onToggleMute, near, onAct
       el.muted = false;
       void el.play().catch(() => undefined);
       setSoundBlocked(false);
+      // This touch only turned sound on; it must not also pause the video.
+      soundTouch.current = Date.now();
     };
     window.addEventListener("pointerdown", restore, true);
     window.addEventListener("touchstart", restore, true);
@@ -153,6 +156,7 @@ export function FeedVideo({ src, index, muted, active, onToggleMute, near, onAct
 
   function togglePlay() {
     if (!playing) return;
+    if (Date.now() - soundTouch.current < 800) return;
     const el = getSharedVideo();
     if (el.paused) {
       el.play().then(() => { userPaused.current = false; setPaused(false); }).catch(() => undefined);
