@@ -14,3 +14,4 @@
 - Persist survey and memo submissions to the device outbox before network delivery; commit IndexedDB transactions before navigating, scope sync to the signed-in user, and back off temporary failures without discarding payloads.
 - Use the shared reliability policy for login and delivery retries so concurrent participants spread requests over time rather than retrying in synchronized bursts.
 - Route-selected feed index controls active playback; use the shared playback helper without silently muting or playing neighboring elements, so sound follows explicit participant preference.
+- Give the active slide sole ownership of shared-player events and recovery; invalidate pending playback callbacks on cleanup and preserve deliberate pause when changing sound, so stale slides cannot interrupt the next video.

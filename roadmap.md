@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Repair shared-player lifecycle, sound preference, and active-slide selection; verify playback and report real-phone limitations.
+
 - [x] Convert 69 newly uploaded videos plus 37 additional uploads (106 total); browser playback/audio verified 106/106; 4,962.2 MB reduced to 621.2 MB. Original backups retained, temporary conversion helper removed, and database confirmed 1,074 converted videos with zero unconverted remaining. Actual phone autoplay remains unverified.
 
 - [x] Remove automatic silent fallback and neighbor playback; default sound on and respect explicit mute. Three tests and ten consecutive audible browser videos passed; actual affected phone remains unverified and changes are not published.
