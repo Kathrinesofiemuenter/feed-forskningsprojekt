@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Repair shared-player lifecycle, sound preference, and active-slide selection; verify playback and report real-phone limitations.
+- [x] Repair shared-player lifecycle, sound preference, and active-slide selection. Four sound tests passed; signed-in Chromium verified ten loaded videos with sound enabled, deliberate pause with mute/unmute, backward scrolling, return-to-app resume, and mobile rendering without runtime errors. Actual phone audio and mobile autoplay policies remain unverified; not published.
 
 - [x] Convert 69 newly uploaded videos plus 37 additional uploads (106 total); browser playback/audio verified 106/106; 4,962.2 MB reduced to 621.2 MB. Original backups retained, temporary conversion helper removed, and database confirmed 1,074 converted videos with zero unconverted remaining. Actual phone autoplay remains unverified.
 
