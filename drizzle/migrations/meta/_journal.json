@@ -36,6 +36,13 @@
       "when": 1792745001199,
       "tag": "0004_delete_rebrib_account",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795266215117,
+      "tag": "0005_fix_video_views_and_watch_log",
+      "breakpoints": true
     }
   ]
 }

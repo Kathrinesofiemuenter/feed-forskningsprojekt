@@ -111,6 +111,7 @@ function FeedPage() {
     void supabase
       .from("video_views")
       .upsert({ user_id: user.id, video_id: v.id }, { onConflict: "user_id,video_id", ignoreDuplicates: true });
+    void supabase.from("video_watch_events").insert({ user_id: user.id, video_id: v.id });
   }, [videos, current, user.id]);
   const [seconds, setSeconds] = useState(surveyStatus.secondsToday);
   const pending = useRef(0);

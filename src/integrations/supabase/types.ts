@@ -137,6 +137,27 @@ export type Database = {
         }
         Relationships: []
       }
+      video_watch_events: {
+        Row: {
+          id: string
+          user_id: string
+          video_id: string
+          watched_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          video_id: string
+          watched_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          video_id?: string
+          watched_at?: string
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           created_at: string
